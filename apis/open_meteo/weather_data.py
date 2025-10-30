@@ -3,12 +3,12 @@ from typing import Optional
 import requests
 from pydantic import BaseModel, Field
 
-from apis.geocoding.lat_long import get_lat_long, get_location_data
+from apis.geocoding.lat_long import get_location_data
 
 _BASE_URL = "https://api.open-meteo.com/v1/forecast"
 
 
-# Current weather data are based on 15 min interval
+# Based on 15 min interval
 class WeatherData(BaseModel):
     date_time: str = Field(alias="time")
     temp: float = Field(alias="temperature_2m")
@@ -22,12 +22,13 @@ class OpenMeteoData(BaseModel):
 
 
 def get_weather_data(zip_code: str) -> Optional[OpenMeteoData]:
-    lat_long = get_lat_long(zip_code, get_location_data)
-    latitude = lat_long.get("latitude")
-    longitude = lat_long.get("longitude")
+    location_data = get_location_data(zip_code)
+    if not location_data:
+        return None
+    lat, long = location_data.latitude, location_data.longitude
     params = {
-        "latitude": latitude,
-        "longitude": longitude,
+        "latitude": lat,
+        "longitude": long,
         "temperature_unit": "fahrenheit",
         "precipitation_unit": "inch",
         "current": [
@@ -53,9 +54,9 @@ if __name__ == "__main__":
         # print(test_data.model_dump_json(indent=4))
         print(test_data.latitude)
         print(test_data.longitude)
-        print(f"The date and time: {test_data.current.date_time}")
-        print(f"The current temp: {test_data.current.temp}°F")
-        print(f"The current rain probability: {test_data.current.rain_probability} %")
+        print(test_data.current.date_time)
+        print(test_data.current.temp)
+        print(test_data.current.rain_probability)
     print("-----------------------")
     weather_data = get_weather_data("07310")
     print(weather_data.latitude)

@@ -1,4 +1,4 @@
-from typing import Optional, Callable
+from typing import Optional
 
 import requests
 from pydantic import BaseModel, Field
@@ -36,13 +36,6 @@ def get_location_data(zip_code: str) -> Optional[Result]:
     return None
 
 
-def get_lat_long(
-    zip_code: str, location_data: Callable[[str], Optional[Result]]
-) -> dict[str, float]:
-    location_data = location_data(zip_code)
-    return {"latitude": location_data.latitude, "longitude": location_data.longitude}
-
-
 if __name__ == "__main__":
     with open("test_data/response.json", "r") as f:
         import json
@@ -53,12 +46,7 @@ if __name__ == "__main__":
         print(test_data.results[0].state)
         print(test_data.results[0].city)
     print("-----------------------")
-    test_location_data = get_location_data(zip_code="07310")
-    print(test_location_data)
-    print(test_location_data.latitude)
-    print(test_location_data.longitude)
-    print("-----------------------")
-    lat_long = get_lat_long("07310", get_location_data)
-    print(lat_long)
-    print(lat_long.get("latitude"))
-    print(lat_long.get("longitude"))
+    location_data = get_location_data(zip_code="07310")
+    print(location_data)
+    print(location_data.latitude)
+    print(location_data.longitude)
