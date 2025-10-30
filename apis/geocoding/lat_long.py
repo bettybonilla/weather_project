@@ -1,7 +1,8 @@
+import logging
 from typing import Optional
 
 import requests
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 
 _BASE_URL = "https://geocoding-api.open-meteo.com/v1/search"
 
@@ -27,12 +28,25 @@ def get_location_data(zip_code: str) -> Optional[Result]:
         _BASE_URL, headers={"Accept": "application/json"}, params={"name": zip_code}
     )
     if response.status_code != 200:
+        logging.getLogger(__name__).warning(
+            f"Status Code: {response.status_code} | Failed to get location data for zip code: {zip_code}"
+        )
         return None
 
-    geocoding_data = GeocodingData(**response.json())
+    try:
+        geocoding_data = GeocodingData(**response.json())
+    except ValidationError:
+        logging.getLogger(__name__).warning(
+            f"Error: ValidationError | Failed to get location data for zip code: {zip_code}"
+        )
+        return None
+
     for result in geocoding_data.results:
         if result.country_code == "US":
             return result
+    logging.getLogger(__name__).warning(
+        f"Failed to get location data in the US for zip code: {zip_code}"
+    )
     return None
 
 
