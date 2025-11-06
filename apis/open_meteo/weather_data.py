@@ -1,7 +1,8 @@
+import logging
 from typing import Optional
 
 import requests
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 
 from apis.geocoding.lat_long import get_location_data
 
@@ -24,6 +25,9 @@ class OpenMeteoData(BaseModel):
 def get_weather_data(zip_code: str) -> Optional[OpenMeteoData]:
     location_data = get_location_data(zip_code)
     if not location_data:
+        logging.getLogger(__name__).error(
+            f"Failed to get weather data for zip code: {zip_code}"
+        )
         return None
     lat, long = location_data.latitude, location_data.longitude
     params = {
@@ -41,9 +45,19 @@ def get_weather_data(zip_code: str) -> Optional[OpenMeteoData]:
         _BASE_URL, headers={"Accept": "application/json"}, params=params
     )
     if response.status_code != 200:
+        logging.getLogger(__name__).error(
+            f"Status Code: {response.status_code} | Failed to get location data for zip code: {zip_code}"
+        )
         return None
-    open_meteo_data = OpenMeteoData(**response.json())
-    return open_meteo_data
+
+    try:
+        open_meteo_data = OpenMeteoData(**response.json())
+        return open_meteo_data
+    except ValidationError:
+        logging.getLogger(__name__).error(
+            f"Error: ValidationError | Failed to get location data for zip code: {zip_code}"
+        )
+        return None
 
 
 if __name__ == "__main__":
