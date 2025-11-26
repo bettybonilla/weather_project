@@ -1,7 +1,7 @@
 import logging
 import sys
 
-from apis.open_meteo.weather_data import get_weather_data
+import apis.open_meteo.weather_data
 
 # Configures the global root logger format
 # The StreamHandler class sends the logs to the console
@@ -14,10 +14,10 @@ logging.basicConfig(
 )
 
 if __name__ == "__main__":
-    weather_data = get_weather_data("07310")
-    if weather_data:
-        print(weather_data.latitude)
-        print(weather_data.longitude)
-        print(weather_data.current.date_time)
-        print(weather_data.current.temp)
-        print(weather_data.current.rain_probability)
+    open_meteo_weather_data = apis.open_meteo.weather_data.get_weather_data("07310")
+    if open_meteo_weather_data:
+        print(open_meteo_weather_data.latitude)
+        print(open_meteo_weather_data.longitude)
+        print(open_meteo_weather_data.current.date_time)
+        print(open_meteo_weather_data.current.temperature)
+        print(open_meteo_weather_data.current.rain_probability)

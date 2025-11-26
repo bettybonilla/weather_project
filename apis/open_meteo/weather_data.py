@@ -4,32 +4,32 @@ from typing import Optional
 import requests
 from pydantic import BaseModel, Field, ValidationError
 
-from apis.geocoding.lat_long import get_location_data
-
-_BASE_URL = "https://api.open-meteo.com/v1/forecast"
+import apis.geocoding.location_data
 
 
 # Based on 15 min interval
 class WeatherData(BaseModel):
     date_time: str = Field(alias="time")
-    temp: float = Field(alias="temperature_2m")
+    temperature: float = Field(alias="temperature_2m")
+    # Percentage: 0-100
     rain_probability: int = Field(alias="precipitation_probability")
 
 
-class OpenMeteoData(BaseModel):
+class OpenMeteoWeatherData(BaseModel):
     latitude: float
     longitude: float
     current: WeatherData
 
 
-def get_weather_data(zip_code: str) -> Optional[OpenMeteoData]:
-    location_data = get_location_data(zip_code)
-    if not location_data:
+# TODO: Refactor to implement DRY principle
+def get_weather_data(zip_code: str) -> Optional[WeatherData]:
+    geocoding_location_data = apis.geocoding.location_data.get_location_data(zip_code)
+    if not geocoding_location_data:
         logging.getLogger(__name__).error(
-            f"Failed to get weather data for zip code: {zip_code}"
+            f"Failed to get geocoding location data for zip code: {zip_code}"
         )
         return None
-    lat, long = location_data.latitude, location_data.longitude
+    lat, long = geocoding_location_data.get_lat_long()
     params = {
         "latitude": lat,
         "longitude": long,
@@ -41,40 +41,34 @@ def get_weather_data(zip_code: str) -> Optional[OpenMeteoData]:
         ],
         "timezone": "auto",
     }
+    base_url = "https://api.open-meteo.com/v1/forecast"
     response = requests.get(
-        _BASE_URL, headers={"Accept": "application/json"}, params=params
+        base_url, headers={"Accept": "application/json"}, params=params
     )
     if response.status_code != 200:
         logging.getLogger(__name__).error(
-            f"Status Code: {response.status_code} | Failed to get location data for zip code: {zip_code}"
+            f"Status Code: {response.status_code} | Failed to get Open-Meteo weather data for zip code: {zip_code}"
         )
         return None
 
     try:
-        open_meteo_data = OpenMeteoData(**response.json())
-        return open_meteo_data
-    except ValidationError:
+        open_meteo_weather_data = OpenMeteoWeatherData(**response.json())
+    except ValidationError as e:
         logging.getLogger(__name__).error(
-            f"Error: ValidationError | Failed to get location data for zip code: {zip_code}"
+            f"Error: ValidationError | Failed to get Open-Meteo weather data for zip code: {zip_code}\n{e}"
         )
         return None
+    return open_meteo_weather_data.current
 
 
 if __name__ == "__main__":
     with open("test_data/response.json", "r") as f:
         import json
 
-        test_data = OpenMeteoData(**json.load(f))
+        test_data = OpenMeteoWeatherData(**json.load(f))
         # print(test_data.model_dump_json(indent=4))
         print(test_data.latitude)
         print(test_data.longitude)
         print(test_data.current.date_time)
-        print(test_data.current.temp)
+        print(test_data.current.temperature)
         print(test_data.current.rain_probability)
-    print("-----------------------")
-    weather_data = get_weather_data("07310")
-    print(weather_data.latitude)
-    print(weather_data.longitude)
-    print(weather_data.current.date_time)
-    print(weather_data.current.temp)
-    print(weather_data.current.rain_probability)
