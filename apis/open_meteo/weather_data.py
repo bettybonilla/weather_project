@@ -7,8 +7,9 @@ from pydantic import BaseModel, Field, ValidationError
 import apis.geocoding.location_data
 
 
-# Based on 15 min interval
+# Based on 15 min interval (local time)
 class WeatherData(BaseModel):
+    # Date/time format: ISO 8601 ("YYYY-MM-DDTHH:mm")
     date_time: str = Field(alias="time")
     temperature: float = Field(alias="temperature_2m")
     # Percentage: 0-100

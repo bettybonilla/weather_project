@@ -1,6 +1,7 @@
 import logging
 import sys
 
+import apis.nws.weather_data
 import apis.open_meteo.weather_data
 
 # Configures the global root logger format
@@ -16,8 +17,15 @@ logging.basicConfig(
 if __name__ == "__main__":
     open_meteo_weather_data = apis.open_meteo.weather_data.get_weather_data("07310")
     if open_meteo_weather_data:
-        print(open_meteo_weather_data.latitude)
-        print(open_meteo_weather_data.longitude)
-        print(open_meteo_weather_data.current.date_time)
-        print(open_meteo_weather_data.current.temperature)
-        print(open_meteo_weather_data.current.rain_probability)
+        print("-----------------------")
+        print(open_meteo_weather_data.date_time)
+        print(open_meteo_weather_data.temperature)
+        print(open_meteo_weather_data.rain_probability)
+        print("-----------------------")
+    nws_weather_data = apis.nws.weather_data.get_weather_data("07310")
+    if nws_weather_data:
+        print("-----------------------")
+        print(nws_weather_data.date_time)
+        print(nws_weather_data.temperature)
+        print(nws_weather_data.rain_probability)
+        print("-----------------------")

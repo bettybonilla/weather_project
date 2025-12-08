@@ -13,9 +13,9 @@ class Value(BaseModel):
 
 
 class Period(BaseModel):
-    # Date/time format: ISO 8601
+    # Date/time format: ISO 8601 ("YYYY-MM-DDTHH:mm:ss±HH:mm")
     start_time: str = Field(alias="startTime")
-    # Date/time format: ISO 8601
+    # Date/time format: ISO 8601 ("YYYY-MM-DDTHH:mm:ss±HH:mm")
     end_time: str = Field(alias="endTime")
     temperature: float
     # Percentage: 0-100
@@ -33,8 +33,9 @@ class NWSWeatherData(BaseModel):
     properties: Property
 
 
-# Based on current top of hour
+# Based on current top of hour (local time)
 class SanitizedWeatherData(BaseModel):
+    # Date/time format: ISO 8601 ("YYYY-MM-DDTHH:mm")
     date_time: str
     temperature: float
     # Percentage: 0-100
@@ -45,9 +46,7 @@ class SanitizedWeatherData(BaseModel):
 def get_weather_data(zip_code: str) -> Optional[SanitizedWeatherData]:
     try:
         # noinspection PyProtectedMember
-        redirect_url = apis.nws.points_data._get_points_data(
-            zip_code
-        ).properties.forecast_hourly
+        redirect_url = apis.nws.points_data._get_points_data(zip_code).forecast_hourly
     except AttributeError as e:
         logging.getLogger(__name__).error(
             f"Error: AttributeError | Failed to get redirect URL for zip code: {zip_code}\n{e}"
@@ -74,15 +73,13 @@ def get_weather_data(zip_code: str) -> Optional[SanitizedWeatherData]:
         )
         return None
 
-    # Ex: 2025-11-17T19:00:00-05:00 = 4 PM
-    current_top_of_hour = (
-        arrow.utcnow().shift(hours=-5).floor("hour").format("YYYY-MM-DDTHH:mm:ss-05:00")
-    )
+    current_top_of_hour_utc_time = arrow.utcnow().floor("hour")
     current_hourly_period = next(
         (
             hourly_period
             for hourly_period in nws_weather_data.properties.periods
-            if hourly_period.start_time == current_top_of_hour
+            if arrow.get(hourly_period.start_time).to("UTC")
+            == current_top_of_hour_utc_time
         ),
         None,
     )
@@ -93,10 +90,9 @@ def get_weather_data(zip_code: str) -> Optional[SanitizedWeatherData]:
         return None
 
     sanitized_weather_data = SanitizedWeatherData(
-        date_time=arrow.utcnow()
-        .shift(hours=-5)
-        .floor("hour")
-        .format("YYYY-MM-DDTHH:mm"),
+        date_time=arrow.get(current_hourly_period.start_time).format(
+            "YYYY-MM-DDTHH:mm"
+        ),
         temperature=current_hourly_period.temperature,
         rain_probability=current_hourly_period.rain_probability.value,
     )
