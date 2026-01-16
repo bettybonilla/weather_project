@@ -214,6 +214,7 @@ __marimo__/
 # JetBrains
 .idea
 
-# local python env
+# Local python environments
 /venv
 /.venv
+/.env
