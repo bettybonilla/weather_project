@@ -33,7 +33,7 @@ class NWSWeatherData(BaseModel):
     properties: Property
 
 
-# Based on current top of hour (local time)
+# Based on current hour
 class SanitizedWeatherData(BaseModel):
     # Date/time format: Arrow object in UTC time ("YYYY-MM-DDTHH:mm:ss+00:00")
     date_time: arrow.arrow.Arrow
@@ -46,7 +46,6 @@ class SanitizedWeatherData(BaseModel):
     model_config = {"arbitrary_types_allowed": True}
 
 
-# TODO: Refactor to implement DRY principle
 def get_weather_data(zip_code: str) -> Optional[SanitizedWeatherData]:
     try:
         # noinspection PyProtectedMember
@@ -101,6 +100,7 @@ def get_weather_data(zip_code: str) -> Optional[SanitizedWeatherData]:
     return sanitized_weather_data
 
 
+# TODO: Move to test file
 if __name__ == "__main__":
     with open("test_data/forecast_hourly_response.json", "r") as f:
         import json

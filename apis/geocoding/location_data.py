@@ -59,6 +59,7 @@ def get_location_data(zip_code: str) -> Optional[Result]:
     return us_result
 
 
+# TODO: Move to test file
 if __name__ == "__main__":
     with open("test_data/response.json", "r") as f:
         import json

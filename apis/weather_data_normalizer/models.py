@@ -1,4 +1,3 @@
-# TODO: Use as global normalizer for all weather data
 import arrow
 
 
@@ -6,6 +5,9 @@ import arrow
 date_time: arrow.arrow.Arrow = arrow.get(
     arrow.utcnow().format("YYYY-MM-DDTHH:mm:ssZZ")
 ).to("UTC")
+
+
+# Based on current hour
 class WeatherData:
     temperature: float
     # Percentage: 0-100

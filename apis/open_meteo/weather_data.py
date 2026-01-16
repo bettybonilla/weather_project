@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field, ValidationError
 import apis.geocoding.location_data
 
 
-# Based on 15 min interval (local time)
+# Based on 15 min interval
 class WeatherData(BaseModel):
     # Date/time format: Arrow object in UTC time ("YYYY-MM-DDTHH:mm:ss+00:00")
     date_time: arrow.arrow.Arrow = arrow.get(
@@ -29,7 +29,6 @@ class OpenMeteoWeatherData(BaseModel):
     current: WeatherData
 
 
-# TODO: Refactor to implement DRY principle
 def get_weather_data(zip_code: str) -> Optional[WeatherData]:
     geocoding_location_data = apis.geocoding.location_data.get_location_data(zip_code)
     if not geocoding_location_data:
@@ -69,6 +68,7 @@ def get_weather_data(zip_code: str) -> Optional[WeatherData]:
     return open_meteo_weather_data.current
 
 
+# TODO: Move to test file
 if __name__ == "__main__":
     with open("test_data/response.json", "r") as f:
         import json

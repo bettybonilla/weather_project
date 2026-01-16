@@ -18,7 +18,6 @@ class NWSPointsData(BaseModel):
     properties: Property
 
 
-# TODO: Refactor to implement DRY principle
 def _get_points_data(zip_code: str) -> Optional[Property]:
     geocoding_location_data = apis.geocoding.location_data.get_location_data(zip_code)
     if not geocoding_location_data:
@@ -47,6 +46,7 @@ def _get_points_data(zip_code: str) -> Optional[Property]:
     return nws_points_data.properties
 
 
+# TODO: Move to test file
 if __name__ == "__main__":
     with open("test_data/points_data_response.json", "r") as f:
         import json
