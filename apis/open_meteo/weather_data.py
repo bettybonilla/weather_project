@@ -1,6 +1,7 @@
 import logging
 from typing import Optional
 
+import arrow
 import requests
 from pydantic import BaseModel, Field, ValidationError
 
@@ -9,11 +10,17 @@ import apis.geocoding.location_data
 
 # Based on 15 min interval (local time)
 class WeatherData(BaseModel):
-    # Date/time format: ISO 8601 ("YYYY-MM-DDTHH:mm")
-    date_time: str = Field(alias="time")
+    # Date/time format: Arrow object in UTC time ("YYYY-MM-DDTHH:mm:ss+00:00")
+    date_time: arrow.arrow.Arrow = arrow.get(
+        arrow.utcnow().format("YYYY-MM-DDTHH:mm:ssZZ")
+    ).to("UTC")
+
     temperature: float = Field(alias="temperature_2m")
+
     # Percentage: 0-100
     rain_probability: int = Field(alias="precipitation_probability")
+
+    model_config = {"arbitrary_types_allowed": True}
 
 
 class OpenMeteoWeatherData(BaseModel):

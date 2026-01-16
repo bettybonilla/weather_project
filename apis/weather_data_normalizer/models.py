@@ -1,8 +1,12 @@
 # TODO: Use as global normalizer for all weather data
+import arrow
+
+
+# Date/time format: Arrow object in UTC time ("YYYY-MM-DDTHH:mm:ss+00:00")
+date_time: arrow.arrow.Arrow = arrow.get(
+    arrow.utcnow().format("YYYY-MM-DDTHH:mm:ssZZ")
+).to("UTC")
 class WeatherData:
-    # Should be a type of Date object
-    # Date/time format: ISO 8601 ("YYYY-MM-DDTHH:mm")
-    date_time: str
     temperature: float
     # Percentage: 0-100
     rain_probability: int

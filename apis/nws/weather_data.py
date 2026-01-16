@@ -35,11 +35,15 @@ class NWSWeatherData(BaseModel):
 
 # Based on current top of hour (local time)
 class SanitizedWeatherData(BaseModel):
-    # Date/time format: ISO 8601 ("YYYY-MM-DDTHH:mm")
-    date_time: str
+    # Date/time format: Arrow object in UTC time ("YYYY-MM-DDTHH:mm:ss+00:00")
+    date_time: arrow.arrow.Arrow
+
     temperature: float
+
     # Percentage: 0-100
     rain_probability: int
+
+    model_config = {"arbitrary_types_allowed": True}
 
 
 # TODO: Refactor to implement DRY principle
@@ -90,9 +94,7 @@ def get_weather_data(zip_code: str) -> Optional[SanitizedWeatherData]:
         return None
 
     sanitized_weather_data = SanitizedWeatherData(
-        date_time=arrow.get(current_hourly_period.start_time).format(
-            "YYYY-MM-DDTHH:mm"
-        ),
+        date_time=arrow.get(current_hourly_period.start_time).to("UTC"),
         temperature=current_hourly_period.temperature,
         rain_probability=current_hourly_period.rain_probability.value,
     )
