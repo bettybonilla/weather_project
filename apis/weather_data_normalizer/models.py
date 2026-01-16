@@ -10,6 +10,7 @@ date_time: arrow.arrow.Arrow = arrow.get(
 # Based on current hour
 class WeatherData:
     temperature: float
+
     # Percentage: 0-100
     rain_probability: int
 

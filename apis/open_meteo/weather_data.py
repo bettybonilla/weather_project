@@ -36,6 +36,7 @@ def get_weather_data(zip_code: str) -> Optional[WeatherData]:
             f"Failed to get geocoding location data for zip code: {zip_code}"
         )
         return None
+
     lat, long = geocoding_location_data.get_lat_long()
     params = {
         "latitude": lat,
@@ -48,6 +49,7 @@ def get_weather_data(zip_code: str) -> Optional[WeatherData]:
         ],
         "timezone": "auto",
     }
+
     base_url = "https://api.open-meteo.com/v1/forecast"
     response = requests.get(
         base_url, headers={"Accept": "application/json"}, params=params

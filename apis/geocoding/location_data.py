@@ -6,12 +6,13 @@ from pydantic import BaseModel, Field, ValidationError
 
 
 class Result(BaseModel):
+    # These zip codes share the same lat, long results
+    zip_codes: list[str] = Field(alias="postcodes")
+
     country: str
     country_code: str
     state: str = Field(alias="admin1")
     city: str = Field(alias="name")
-    # These zip codes share the same lat, long results
-    zip_codes: list[str] = Field(alias="postcodes")
     latitude: float
     longitude: float
     timezone: str
@@ -51,6 +52,7 @@ def get_location_data(zip_code: str) -> Optional[Result]:
         ),
         None,
     )
+
     if not us_result:
         logging.getLogger(__name__).warning(
             f"Failed to get geocoding location data in the US for zip code: {zip_code}"

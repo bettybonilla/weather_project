@@ -15,9 +15,10 @@ class Value(BaseModel):
 class Period(BaseModel):
     # Date/time format: ISO 8601 ("YYYY-MM-DDTHH:mm:ss±HH:mm")
     start_time: str = Field(alias="startTime")
-    # Date/time format: ISO 8601 ("YYYY-MM-DDTHH:mm:ss±HH:mm")
     end_time: str = Field(alias="endTime")
+
     temperature: float
+
     # Percentage: 0-100
     rain_probability: Value = Field(alias="probabilityOfPrecipitation")
 
@@ -25,6 +26,7 @@ class Period(BaseModel):
 class Property(BaseModel):
     # List of hourly periods over the next seven days
     periods: list[Period]
+
     # Default value: "us"
     units: str
 
@@ -61,6 +63,7 @@ def get_weather_data(zip_code: str) -> Optional[SanitizedWeatherData]:
             f"Failed to get redirect URL for zip code: {zip_code}"
         )
         return None
+
     response = requests.get(redirect_url, headers={"Accept": "application/geo+json"})
     if response.status_code != 200:
         logging.getLogger(__name__).error(
@@ -86,6 +89,7 @@ def get_weather_data(zip_code: str) -> Optional[SanitizedWeatherData]:
         ),
         None,
     )
+
     if not current_hourly_period:
         logging.getLogger(__name__).error(
             f"Failed to get NWS weather data for the current hourly period for zip code: {zip_code}"

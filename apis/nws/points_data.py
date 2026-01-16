@@ -25,6 +25,7 @@ def _get_points_data(zip_code: str) -> Optional[Property]:
             f"Failed to get geocoding location data for zip code: {zip_code}"
         )
         return None
+
     lat, long = geocoding_location_data.get_lat_long()
     base_url = "https://api.weather.gov/points"
     response = requests.get(
