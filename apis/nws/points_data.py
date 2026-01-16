@@ -53,7 +53,10 @@ if __name__ == "__main__":
 
         test_data = NWSPointsData(**json.load(f))
         # print(test_data.model_dump_json(indent=4))
-        print(test_data.properties.forecast_hourly)
-        print(test_data.properties.grid_id)
-        print(test_data.properties.grid_x)
-        print(test_data.properties.grid_y)
+        print(
+            test_data.properties.forecast_hourly,
+            type(test_data.properties.forecast_hourly),
+        )
+        print(test_data.properties.grid_id, type(test_data.properties.grid_id))
+        print(test_data.properties.grid_x, type(test_data.properties.grid_x))
+        print(test_data.properties.grid_y, type(test_data.properties.grid_y))

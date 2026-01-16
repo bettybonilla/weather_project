@@ -107,7 +107,50 @@ if __name__ == "__main__":
 
         test_data = NWSWeatherData(**json.load(f))
         # print(test_data.model_dump_json(indent=4))
-        print(test_data.properties.periods[4].start_time)
-        print(test_data.properties.periods[4].end_time)
-        print(test_data.properties.periods[4].temperature)
-        print(test_data.properties.periods[4].rain_probability.value)
+        print(
+            test_data.properties.periods[1].start_time,
+            type(test_data.properties.periods[1].start_time),
+        )
+        print(
+            test_data.properties.periods[1].end_time,
+            type(test_data.properties.periods[1].end_time),
+        )
+        print(
+            test_data.properties.periods[1].temperature,
+            type(test_data.properties.periods[1].temperature),
+        )
+        print(
+            test_data.properties.periods[1].rain_probability.value,
+            type(test_data.properties.periods[1].rain_probability.value),
+        )
+
+        print("")
+        test_start_time = "2025-11-17T16:00:00-05:00"
+        test_current_top_of_hour_utc_time = arrow.get(test_start_time).to("UTC")
+        test_current_hourly_period = next(
+            (
+                hourly_period
+                for hourly_period in test_data.properties.periods
+                if arrow.get(hourly_period.start_time).to("UTC")
+                == test_current_top_of_hour_utc_time
+            ),
+            None,
+        )
+
+        test_sanitized_weather_data = SanitizedWeatherData(
+            date_time=arrow.get(test_current_hourly_period.start_time).to("UTC"),
+            temperature=test_current_hourly_period.temperature,
+            rain_probability=test_current_hourly_period.rain_probability.value,
+        )
+        print(
+            test_sanitized_weather_data.date_time,
+            type(test_sanitized_weather_data.date_time),
+        )
+        print(
+            test_sanitized_weather_data.temperature,
+            type(test_sanitized_weather_data.temperature),
+        )
+        print(
+            test_sanitized_weather_data.rain_probability,
+            type(test_sanitized_weather_data.rain_probability),
+        )

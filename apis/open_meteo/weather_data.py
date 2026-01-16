@@ -75,8 +75,10 @@ if __name__ == "__main__":
 
         test_data = OpenMeteoWeatherData(**json.load(f))
         # print(test_data.model_dump_json(indent=4))
-        print(test_data.latitude)
-        print(test_data.longitude)
-        print(test_data.current.date_time)
-        print(test_data.current.temperature)
-        print(test_data.current.rain_probability)
+
+        # Using arrow for current.date_time not test_data/response.json file
+        print(test_data.current.date_time, type(test_data.current.date_time))
+        print(test_data.current.temperature, type(test_data.current.temperature))
+        print(
+            test_data.current.rain_probability, type(test_data.current.rain_probability)
+        )
