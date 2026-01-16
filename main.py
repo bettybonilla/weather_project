@@ -3,6 +3,7 @@ import sys
 
 import apis.nws.weather_data
 import apis.open_meteo.weather_data
+import apis.weatherapi.weather_data
 
 # Configures the global root logger format
 # The StreamHandler class sends the logs to the console
@@ -28,4 +29,19 @@ if __name__ == "__main__":
         print(nws_weather_data.date_time)
         print(nws_weather_data.temperature)
         print(nws_weather_data.rain_probability)
+    weatherapi_weather_data = apis.weatherapi.weather_data.get_weather_data("07310")
+    if weatherapi_weather_data:
+        print("-----------------------")
+        print("weatherapi_weather_data:")
+        print(
+            weatherapi_weather_data.date_time, type(weatherapi_weather_data.date_time)
+        )
+        print(
+            weatherapi_weather_data.temperature,
+            type(weatherapi_weather_data.temperature),
+        )
+        print(
+            weatherapi_weather_data.rain_probability,
+            type(weatherapi_weather_data.rain_probability),
+        )
         print("-----------------------")

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+	<location>
+		<name>Jersey City</name>
+		<region>New Jersey</region>
+		<country>USA</country>
+		<lat>40.7323989868164</lat>
+		<lon>-74.043098449707</lon>
+		<tz_id>America/New_York</tz_id>
+		<localtime_epoch>1767906096</localtime_epoch>
+		<localtime>2026-01-08 16:01</localtime>
+	</location>
+	<current>
+		<last_updated_epoch>1767906000</last_updated_epoch>
+		<last_updated>2026-01-08 16:00</last_updated>
+		<temp_c>9.4</temp_c>
+		<temp_f>48.9</temp_f>
+		<is_day>1</is_day>
+		<condition>
+			<text>Partly Cloudy</text>
+			<icon>//cdn.weatherapi.com/weather/64x64/day/116.png</icon>
+			<code>1003</code>
+		</condition>
+		<wind_mph>5.4</wind_mph>
+		<wind_kph>8.6</wind_kph>
+		<wind_degree>337</wind_degree>
+		<wind_dir>NNW</wind_dir>
+		<pressure_mb>1023</pressure_mb>
+		<pressure_in>30.22</pressure_in>
+		<precip_mm>0</precip_mm>
+		<precip_in>0</precip_in>
+		<humidity>48</humidity>
+		<cloud>0</cloud>
+		<feelslike_c>8.2</feelslike_c>
+		<feelslike_f>46.7</feelslike_f>
+		<windchill_c>10.3</windchill_c>
+		<windchill_f>50.5</windchill_f>
+		<heatindex_c>10.8</heatindex_c>
+		<heatindex_f>51.5</heatindex_f>
+		<dewpoint_c>2.5</dewpoint_c>
+		<dewpoint_f>36.4</dewpoint_f>
+		<vis_km>16</vis_km>
+		<vis_miles>9</vis_miles>
+		<uv>0.1</uv>
+		<gust_mph>7.6</gust_mph>
+		<gust_kph>12.2</gust_kph>
+	</current>
+</root>
