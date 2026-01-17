@@ -79,7 +79,7 @@ if __name__ == "__main__":
             type(test_child_current.find("precip_mm").text),
         )
 
-        print("")
+        print()
         test_data = WeatherAPIWeatherData(emulated_response_xml)
         print(test_data.date_time, type(test_data.date_time))
         print(test_data.temperature, type(test_data.temperature))

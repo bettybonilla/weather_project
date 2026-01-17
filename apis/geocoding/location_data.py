@@ -75,7 +75,7 @@ if __name__ == "__main__":
         print(test_data.results[0].latitude, type(test_data.results[0].latitude))
         print(test_data.results[0].longitude, type(test_data.results[0].longitude))
 
-        print("")
+        print()
         print(
             test_data.results[0].get_lat_long(),
             type(test_data.results[0].get_lat_long()),

@@ -36,16 +36,17 @@ class NWSWeatherData(BaseModel):
 
 
 # Based on current hour
-class SanitizedWeatherData(BaseModel):
-    # Date/time format: Arrow object in UTC time ("YYYY-MM-DDTHH:mm:ss+00:00")
-    date_time: arrow.arrow.Arrow
+class SanitizedWeatherData:
+    def __init__(
+        self, date_time: arrow.Arrow, temperature: float, rain_probability: int
+    ):
+        # Date/time format: Arrow object in UTC time ("YYYY-MM-DDTHH:mm:ss+00:00")
+        self.date_time: arrow.arrow.Arrow = date_time
 
-    temperature: float
+        self.temperature: float = temperature
 
-    # Percentage: 0-100
-    rain_probability: int
-
-    model_config = {"arbitrary_types_allowed": True}
+        # Percentage: 0-100
+        self.rain_probability: int = rain_probability
 
 
 def get_weather_data(zip_code: str) -> Optional[SanitizedWeatherData]:
@@ -128,7 +129,7 @@ if __name__ == "__main__":
             type(test_data.properties.periods[1].rain_probability.value),
         )
 
-        print("")
+        print()
         test_start_time = "2025-11-17T16:00:00-05:00"
         test_current_top_of_hour_utc_time = arrow.get(test_start_time).to("UTC")
         test_current_hourly_period = next(
