@@ -6,12 +6,13 @@ from pydantic import BaseModel, Field, ValidationError
 
 
 class Result(BaseModel):
+    # These zip codes share the same lat, long results
+    zip_codes: list[str] = Field(alias="postcodes")
+
     country: str
     country_code: str
     state: str = Field(alias="admin1")
     city: str = Field(alias="name")
-    # These zip codes share the same lat, long results
-    zip_codes: list[str] = Field(alias="postcodes")
     latitude: float
     longitude: float
     timezone: str
@@ -51,6 +52,7 @@ def get_location_data(zip_code: str) -> Optional[Result]:
         ),
         None,
     )
+
     if not us_result:
         logging.getLogger(__name__).warning(
             f"Failed to get geocoding location data in the US for zip code: {zip_code}"
@@ -59,6 +61,7 @@ def get_location_data(zip_code: str) -> Optional[Result]:
     return us_result
 
 
+# TODO: Move to test file
 if __name__ == "__main__":
     with open("test_data/response.json", "r") as f:
         import json
@@ -66,6 +69,14 @@ if __name__ == "__main__":
         test_data = GeocodingLocationData(**json.load(f))
         # print(test_data.model_dump_json(indent=4))
         print(test_data.results[0])
-        print(test_data.results[0].state)
-        print(test_data.results[0].city)
-        print(test_data.results[0].get_lat_long())
+        print(test_data.results[0].state, type(test_data.results[0].state))
+        print(test_data.results[0].city, type(test_data.results[0].city))
+        print(test_data.results[0].zip_codes, type(test_data.results[0].zip_codes))
+        print(test_data.results[0].latitude, type(test_data.results[0].latitude))
+        print(test_data.results[0].longitude, type(test_data.results[0].longitude))
+
+        print()
+        print(
+            test_data.results[0].get_lat_long(),
+            type(test_data.results[0].get_lat_long()),
+        )
