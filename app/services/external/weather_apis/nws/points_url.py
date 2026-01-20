@@ -4,23 +4,25 @@ from typing import Optional
 import requests
 from pydantic import BaseModel, Field, ValidationError
 
-import apis.geocoding.location_data
+from app.services.external.weather_apis.location_api.geocoding.location_data import (
+    get_location_data,
+)
 
 
 class Property(BaseModel):
-    forecast_hourly: str = Field(alias="forecastHourly")
+    forecast_hourly_url: str = Field(alias="forecastHourly")
     grid_id: str = Field(alias="gridId")
     grid_x: int = Field(alias="gridX")
     grid_y: int = Field(alias="gridY")
 
 
-class NWSPointsData(BaseModel):
+class NWSPointsURLDataModel(BaseModel):
     properties: Property
 
 
-def _get_points_data(zip_code: str) -> Optional[Property]:
-    geocoding_location_data = apis.geocoding.location_data.get_location_data(zip_code)
-    if not geocoding_location_data:
+def get_points_url(zip_code: str) -> Optional[Property]:
+    geocoding_location_data = get_location_data(zip_code)
+    if geocoding_location_data is None:
         logging.getLogger(__name__).warning(
             f"Failed to get geocoding location data for zip code: {zip_code}"
         )
@@ -33,30 +35,29 @@ def _get_points_data(zip_code: str) -> Optional[Property]:
     )
     if response.status_code != 200:
         logging.getLogger(__name__).warning(
-            f"Status Code: {response.status_code} | Failed to get NWS points data for zip code: {zip_code}"
+            f"Status Code: {response.status_code} | Failed to get NWS points URL for zip code: {zip_code}"
         )
         return None
 
     try:
-        nws_points_data = NWSPointsData(**response.json())
+        nws_points_url = NWSPointsURLDataModel(**response.json())
     except ValidationError as e:
         logging.getLogger(__name__).warning(
-            f"Error: ValidationError | Failed to get NWS points data for zip code: {zip_code}\n{e}"
+            f"Error: ValidationError | Failed to get NWS points URL for zip code: {zip_code}\n{e}"
         )
         return None
-    return nws_points_data.properties
+    return nws_points_url.properties
 
 
-# TODO: Move to test file
 if __name__ == "__main__":
-    with open("test_data/points_data_response.json", "r") as f:
+    with open("test_data/points_url_response.json", "r") as f:
         import json
 
-        test_data = NWSPointsData(**json.load(f))
+        test_data = NWSPointsURLDataModel(**json.load(f))
         # print(test_data.model_dump_json(indent=4))
         print(
-            test_data.properties.forecast_hourly,
-            type(test_data.properties.forecast_hourly),
+            test_data.properties.forecast_hourly_url,
+            type(test_data.properties.forecast_hourly_url),
         )
         print(test_data.properties.grid_id, type(test_data.properties.grid_id))
         print(test_data.properties.grid_x, type(test_data.properties.grid_x))
