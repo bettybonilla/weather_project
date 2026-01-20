@@ -4,6 +4,8 @@ from typing import Optional
 import requests
 from pydantic import BaseModel, Field, ValidationError
 
+from app.services.external.weather_apis.weather_interface import REQUEST_TIMEOUT
+
 
 class Result(BaseModel):
     # These zip codes share the same lat, long results
@@ -21,14 +23,17 @@ class Result(BaseModel):
         return self.latitude, self.longitude
 
 
-class GeocodingLocationData(BaseModel):
+class GeocodingDataModel(BaseModel):
     results: list[Result]
 
 
-def get_location_data(zip_code: str) -> Optional[Result]:
+async def get_location_data(zip_code: str) -> Optional[Result]:
     base_url = "https://geocoding-api.open-meteo.com/v1/search"
     response = requests.get(
-        base_url, headers={"Accept": "application/json"}, params={"name": zip_code}
+        base_url,
+        headers={"Accept": "application/json"},
+        params={"name": zip_code},
+        timeout=REQUEST_TIMEOUT,
     )
     if response.status_code != 200:
         logging.getLogger(__name__).warning(
@@ -37,7 +42,7 @@ def get_location_data(zip_code: str) -> Optional[Result]:
         return None
 
     try:
-        geocoding_location_data = GeocodingLocationData(**response.json())
+        geocoding = GeocodingDataModel(**response.json())
     except ValidationError as e:
         logging.getLogger(__name__).warning(
             f"Error: ValidationError | Failed to get geocoding location data for zip code: {zip_code}\n{e}"
@@ -45,15 +50,11 @@ def get_location_data(zip_code: str) -> Optional[Result]:
         return None
 
     us_result = next(
-        (
-            result
-            for result in geocoding_location_data.results
-            if result.country_code == "US"
-        ),
+        (result for result in geocoding.results if result.country_code == "US"),
         None,
     )
 
-    if not us_result:
+    if us_result is None:
         logging.getLogger(__name__).warning(
             f"Failed to get geocoding location data in the US for zip code: {zip_code}"
         )
@@ -61,12 +62,11 @@ def get_location_data(zip_code: str) -> Optional[Result]:
     return us_result
 
 
-# TODO: Move to test file
 if __name__ == "__main__":
     with open("test_data/response.json", "r") as f:
         import json
 
-        test_data = GeocodingLocationData(**json.load(f))
+        test_data = GeocodingDataModel(**json.load(f))
         # print(test_data.model_dump_json(indent=4))
         print(test_data.results[0])
         print(test_data.results[0].state, type(test_data.results[0].state))
