@@ -1,6 +1,6 @@
 from typing import Protocol, Optional
 
-REQUEST_TIMEOUT = 5
+from app.services.external.weather_apis.location_api.geocoding import location_data
 
 
 class NormalizedWeatherData:
@@ -13,5 +13,7 @@ class NormalizedWeatherData:
 
 class IWeatherGetter(Protocol):
     @staticmethod
-    async def get_weather_data(zip_code: str) -> Optional[NormalizedWeatherData]:
+    async def get_weather_data(
+        location_data_result: Optional[location_data.Result],
+    ) -> Optional[NormalizedWeatherData]:
         pass

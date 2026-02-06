@@ -4,10 +4,8 @@ from typing import Optional
 import requests
 from pydantic import BaseModel, Field, ValidationError
 
-from app.services.external.weather_apis.location_api.geocoding.location_data import (
-    get_location_data,
-)
-from app.services.external.weather_apis.weather_interface import REQUEST_TIMEOUT
+from app.config.config import REQUEST_TIMEOUT
+from app.services.external.weather_apis.location_api.geocoding import location_data
 
 
 class Property(BaseModel):
@@ -21,15 +19,10 @@ class NWSPointsURLDataModel(BaseModel):
     properties: Property
 
 
-async def get_points_url(zip_code: str) -> Optional[Property]:
-    geocoding_location_data = await get_location_data(zip_code)
-    if geocoding_location_data is None:
-        logging.getLogger(__name__).warning(
-            f"Failed to get geocoding location data for zip code: {zip_code}"
-        )
-        return None
-
-    lat, long = geocoding_location_data.get_lat_long()
+def get_points_url(
+    location_data_result: Optional[location_data.Result],
+) -> Optional[Property]:
+    lat, long = location_data_result.get_lat_long()
     base_url = "https://api.weather.gov/points"
     response = requests.get(
         f"{base_url}/{lat},{long}",
@@ -38,7 +31,7 @@ async def get_points_url(zip_code: str) -> Optional[Property]:
     )
     if response.status_code != 200:
         logging.getLogger(__name__).warning(
-            f"Status Code: {response.status_code} | Failed to get NWS points URL for zip code: {zip_code}"
+            f"Status Code: {response.status_code} | Failed to get NWS points URL for zip code: {location_data_result.get_zip_code()}"
         )
         return None
 
@@ -46,7 +39,7 @@ async def get_points_url(zip_code: str) -> Optional[Property]:
         nws_points_url = NWSPointsURLDataModel(**response.json())
     except ValidationError as e:
         logging.getLogger(__name__).warning(
-            f"Error: ValidationError | Failed to get NWS points URL for zip code: {zip_code}\n{e}"
+            f"Error: ValidationError | Failed to get NWS points URL for zip code: {location_data_result.get_zip_code()}\n{e}"
         )
         return None
     return nws_points_url.properties

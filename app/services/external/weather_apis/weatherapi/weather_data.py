@@ -7,10 +7,11 @@ from typing import Optional
 import requests
 from pydantic import ValidationError
 
+from app.config.config import REQUEST_TIMEOUT
+from app.services.external.weather_apis.location_api.geocoding import location_data
 from app.services.external.weather_apis.weather_interface import (
     IWeatherGetter,
     NormalizedWeatherData,
-    REQUEST_TIMEOUT,
 )
 
 
@@ -31,7 +32,9 @@ class WeatherAPIDataModel:
 # Based on 15 min interval
 class WeatherAPI(IWeatherGetter):
     @staticmethod
-    async def get_weather_data(zip_code: str) -> Optional[NormalizedWeatherData]:
+    async def get_weather_data(
+        location_data_result: Optional[location_data.Result],
+    ) -> Optional[NormalizedWeatherData]:
         api_key = os.getenv("WEATHERAPI_API_KEY")
         if not api_key:
             logging.getLogger(__name__).error(
@@ -42,12 +45,12 @@ class WeatherAPI(IWeatherGetter):
         base_url = "https://api.weatherapi.com/v1/current.xml"
         response = requests.get(
             base_url,
-            params={"key": api_key, "q": zip_code},
+            params={"key": api_key, "q": location_data_result.get_zip_code()},
             timeout=REQUEST_TIMEOUT,
         )
         if response.status_code != 200:
             logging.getLogger(__name__).error(
-                f"Status Code: {response.status_code} | Failed to get WeatherAPI weather data for zip code: {zip_code}"
+                f"Status Code: {response.status_code} | Failed to get WeatherAPI weather data for zip code: {location_data_result.get_zip_code()}"
             )
             return None
 
@@ -59,7 +62,7 @@ class WeatherAPI(IWeatherGetter):
             )
         except ValidationError as e:
             logging.getLogger(__name__).error(
-                f"Error: ValidationError | Failed to get WeatherAPI weather data for zip code: {zip_code}\n{e}"
+                f"Error: ValidationError | Failed to get WeatherAPI weather data for zip code: {location_data_result.get_zip_code()}\n{e}"
             )
             return None
         return normalized_weather_data
@@ -67,7 +70,9 @@ class WeatherAPI(IWeatherGetter):
 
 if __name__ == "__main__":
     test_weatherapi = WeatherAPI()
-    test_data = asyncio.run(test_weatherapi.get_weather_data("07310"))
+    test_data = asyncio.run(
+        test_weatherapi.get_weather_data(location_data.get_location_data("07310"))
+    )
     print(test_data.temperature, type(test_data.temperature))
     print(test_data.rain_probability, type(test_data.rain_probability))
     print()

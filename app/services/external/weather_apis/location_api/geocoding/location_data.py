@@ -4,7 +4,7 @@ from typing import Optional
 import requests
 from pydantic import BaseModel, Field, ValidationError
 
-from app.services.external.weather_apis.weather_interface import REQUEST_TIMEOUT
+from app.config.config import REQUEST_TIMEOUT
 
 
 class Result(BaseModel):
@@ -19,15 +19,20 @@ class Result(BaseModel):
     longitude: float
     timezone: str
 
+    _zip_code: str
+
     def get_lat_long(self) -> tuple[float, float]:
         return self.latitude, self.longitude
+
+    def get_zip_code(self) -> str:
+        return self._zip_code
 
 
 class GeocodingDataModel(BaseModel):
     results: list[Result]
 
 
-async def get_location_data(zip_code: str) -> Optional[Result]:
+def get_location_data(zip_code: str) -> Optional[Result]:
     base_url = "https://geocoding-api.open-meteo.com/v1/search"
     response = requests.get(
         base_url,
@@ -37,7 +42,7 @@ async def get_location_data(zip_code: str) -> Optional[Result]:
     )
     if response.status_code != 200:
         logging.getLogger(__name__).warning(
-            f"Status Code: {response.status_code} | Failed to get geocoding location data for zip code: {zip_code}"
+            f"Status Code: {response.status_code} | Failed to get Geocoding location data for zip code: {zip_code}"
         )
         return None
 
@@ -45,7 +50,7 @@ async def get_location_data(zip_code: str) -> Optional[Result]:
         geocoding = GeocodingDataModel(**response.json())
     except ValidationError as e:
         logging.getLogger(__name__).warning(
-            f"Error: ValidationError | Failed to get geocoding location data for zip code: {zip_code}\n{e}"
+            f"Error: ValidationError | Failed to get Geocoding location data for zip code: {zip_code}\n{e}"
         )
         return None
 
@@ -56,9 +61,10 @@ async def get_location_data(zip_code: str) -> Optional[Result]:
 
     if us_result is None:
         logging.getLogger(__name__).warning(
-            f"Failed to get geocoding location data in the US for zip code: {zip_code}"
+            f"Failed to get Geocoding location data in the US for zip code: {zip_code}"
         )
         return None
+    us_result._zip_code = zip_code
     return us_result
 
 
