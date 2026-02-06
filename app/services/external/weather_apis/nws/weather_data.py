@@ -6,11 +6,12 @@ import arrow
 import requests
 from pydantic import BaseModel, Field, ValidationError
 
+from app.config.config import REQUEST_TIMEOUT
+from app.services.external.weather_apis.location_api.geocoding import location_data
 from app.services.external.weather_apis.nws.points_url import get_points_url
 from app.services.external.weather_apis.weather_interface import (
     IWeatherGetter,
     NormalizedWeatherData,
-    REQUEST_TIMEOUT,
 )
 
 
@@ -44,18 +45,20 @@ class NWSDataModel(BaseModel):
 # Based on current hour
 class NWSAPI(IWeatherGetter):
     @staticmethod
-    async def get_weather_data(zip_code: str) -> Optional[NormalizedWeatherData]:
-        nws_points_url = await get_points_url(zip_code)
+    async def get_weather_data(
+        location_data_result: Optional[location_data.Result],
+    ) -> Optional[NormalizedWeatherData]:
+        nws_points_url = get_points_url(location_data_result)
         if nws_points_url is None:
             logging.getLogger(__name__).error(
-                f"Failed to get NWS points URL for zip code: {zip_code}"
+                f"Failed to get NWS points URL for zip code: {location_data_result.get_zip_code()}"
             )
             return None
 
         redirect_url = nws_points_url.forecast_hourly_url
         if not redirect_url:
             logging.getLogger(__name__).error(
-                f"Failed to get redirect URL for zip code: {zip_code}"
+                f"Failed to get redirect URL for zip code: {location_data_result.get_zip_code()}"
             )
             return None
 
@@ -66,7 +69,7 @@ class NWSAPI(IWeatherGetter):
         )
         if response.status_code != 200:
             logging.getLogger(__name__).error(
-                f"Status Code: {response.status_code} | Failed to get NWS weather data for zip code: {zip_code}"
+                f"Status Code: {response.status_code} | Failed to get NWS weather data for zip code: {location_data_result.get_zip_code()}"
             )
             return None
 
@@ -74,7 +77,7 @@ class NWSAPI(IWeatherGetter):
             nws = NWSDataModel(**response.json())
         except ValidationError as e:
             logging.getLogger(__name__).error(
-                f"Error: ValidationError | Failed to get NWS weather data for zip code: {zip_code}\n{e}"
+                f"Error: ValidationError | Failed to get NWS weather data for zip code: {location_data_result.get_zip_code()}\n{e}"
             )
             return None
 
@@ -91,7 +94,7 @@ class NWSAPI(IWeatherGetter):
 
         if current_hourly_period is None:
             logging.getLogger(__name__).error(
-                f"Failed to get NWS weather data for the current hourly period for zip code: {zip_code}"
+                f"Failed to get NWS weather data for the current hourly period for zip code: {location_data_result.get_zip_code()}"
             )
             return None
 
@@ -104,7 +107,11 @@ class NWSAPI(IWeatherGetter):
 
 if __name__ == "__main__":
     test_nws = NWSAPI()
-    test_data = asyncio.run(test_nws.get_weather_data("07310"))
+    test_data = asyncio.run(
+        test_nws.get_weather_data(
+            location_data_result=location_data.get_location_data("07310"),
+        )
+    )
     print(test_data.temperature, type(test_data.temperature))
     print(test_data.rain_probability, type(test_data.rain_probability))
     print()

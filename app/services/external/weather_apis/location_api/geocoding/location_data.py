@@ -4,7 +4,7 @@ from typing import Optional
 import requests
 from pydantic import BaseModel, Field, ValidationError
 
-from app.services.external.weather_apis.weather_interface import REQUEST_TIMEOUT
+from app.config.config import REQUEST_TIMEOUT
 
 
 class Result(BaseModel):
@@ -19,15 +19,20 @@ class Result(BaseModel):
     longitude: float
     timezone: str
 
+    _zip_code: str
+
     def get_lat_long(self) -> tuple[float, float]:
         return self.latitude, self.longitude
+
+    def get_zip_code(self) -> str:
+        return self._zip_code
 
 
 class GeocodingDataModel(BaseModel):
     results: list[Result]
 
 
-async def get_location_data(zip_code: str) -> Optional[Result]:
+def get_location_data(zip_code: str) -> Optional[Result]:
     base_url = "https://geocoding-api.open-meteo.com/v1/search"
     response = requests.get(
         base_url,

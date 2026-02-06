@@ -5,13 +5,11 @@ from typing import Optional
 import requests
 from pydantic import BaseModel, Field, ValidationError
 
-from app.services.external.weather_apis.location_api.geocoding.location_data import (
-    get_location_data,
-)
+from app.config.config import REQUEST_TIMEOUT
+from app.services.external.weather_apis.location_api.geocoding import location_data
 from app.services.external.weather_apis.weather_interface import (
     IWeatherGetter,
     NormalizedWeatherData,
-    REQUEST_TIMEOUT,
 )
 
 
@@ -31,15 +29,10 @@ class OpenMeteoDataModel(BaseModel):
 # Based on 15 min interval
 class OpenMeteoAPI(IWeatherGetter):
     @staticmethod
-    async def get_weather_data(zip_code: str) -> Optional[NormalizedWeatherData]:
-        geocoding_location_data = await get_location_data(zip_code)
-        if geocoding_location_data is None:
-            logging.getLogger(__name__).error(
-                f"Failed to get geocoding location data for zip code: {zip_code}"
-            )
-            return None
-
-        lat, long = geocoding_location_data.get_lat_long()
+    async def get_weather_data(
+        location_data_result: Optional[location_data.Result],
+    ) -> Optional[NormalizedWeatherData]:
+        lat, long = location_data_result.get_lat_long()
         params = {
             "latitude": lat,
             "longitude": long,
@@ -61,7 +54,7 @@ class OpenMeteoAPI(IWeatherGetter):
         )
         if response.status_code != 200:
             logging.getLogger(__name__).error(
-                f"Status Code: {response.status_code} | Failed to get Open-Meteo weather data for zip code: {zip_code}"
+                f"Status Code: {response.status_code} | Failed to get Open-Meteo weather data for zip code: {location_data_result.get_zip_code()}"
             )
             return None
 
@@ -73,7 +66,7 @@ class OpenMeteoAPI(IWeatherGetter):
             )
         except ValidationError as e:
             logging.getLogger(__name__).error(
-                f"Error: ValidationError | Failed to get Open-Meteo weather data for zip code: {zip_code}\n{e}"
+                f"Error: ValidationError | Failed to get Open-Meteo weather data for zip code: {location_data_result.get_zip_code()}\n{e}"
             )
             return None
         return normalized_weather_data
@@ -81,7 +74,11 @@ class OpenMeteoAPI(IWeatherGetter):
 
 if __name__ == "__main__":
     test_open_meteo = OpenMeteoAPI()
-    test_data = asyncio.run(test_open_meteo.get_weather_data(zip_code="07310"))
+    test_data = asyncio.run(
+        test_open_meteo.get_weather_data(
+            location_data_result=location_data.get_location_data("07310"),
+        )
+    )
     print(test_data.temperature, type(test_data.temperature))
     print(test_data.rain_probability, type(test_data.rain_probability))
     print()

@@ -1,9 +1,11 @@
 import asyncio
+import logging
 import math
 from typing import Optional
 
 from pydantic import BaseModel
 
+from app.services.external.weather_apis.location_api.geocoding import location_data
 from app.services.external.weather_apis.nws.weather_data import NWSAPI
 from app.services.external.weather_apis.open_meteo.weather_data import OpenMeteoAPI
 from app.services.external.weather_apis.weather_interface import (
@@ -32,9 +34,16 @@ async def get_aggregated_weather_data(zip_code: str) -> Optional[AggregateWeathe
     #     arrow.utcnow().format("YYYY-MM-DDTHH:mm:ssZZ")
     # ).to("UTC")
 
+    location_data_result = location_data.get_location_data(zip_code)
+    if location_data_result is None:
+        logging.getLogger(__name__).error(
+            f"Failed to get Geocoding location data for zip code: {zip_code}"
+        )
+        return None
+
     tasks = []
     for w in __WEATHER_GETTERS:
-        tasks.append(w.get_weather_data(zip_code))
+        tasks.append(w.get_weather_data(location_data_result))
 
     weather_data_results = await asyncio.gather(*tasks)
     weather_data_results = list(filter(None, weather_data_results))
@@ -60,8 +69,10 @@ if __name__ == "__main__":
 
     class TestWeatherGetter(IWeatherGetter):
         @staticmethod
-        async def get_weather_data(zip_code: str) -> Optional[NormalizedWeatherData]:
-            if zip_code != "foo":
+        async def get_weather_data(
+            location_data_result: Optional[location_data.Result],
+        ) -> Optional[NormalizedWeatherData]:
+            if location_data_result.get_zip_code() != "07310":
                 return None
 
             temperature = random.uniform(0.0, 90.0)
@@ -76,6 +87,6 @@ if __name__ == "__main__":
         TestWeatherGetter(),
     ]
 
-    result = asyncio.run(get_aggregated_weather_data("foo"))
+    result = asyncio.run(get_aggregated_weather_data("07310"))
     print(result)
     print("DONE")

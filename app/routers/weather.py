@@ -1,10 +1,9 @@
 import logging
-from typing import Optional
 
 from app.services.external.weather_apis.aggregator import get_aggregated_weather_data
 
 
-async def retriever_handler(zip_code: str) -> Optional[str]:
+async def retriever_handler(zip_code: str):
     aggregated_weather_data = await get_aggregated_weather_data(zip_code)
     if aggregated_weather_data is None:
         logging.getLogger(__name__).error(
@@ -12,6 +11,5 @@ async def retriever_handler(zip_code: str) -> Optional[str]:
         )
         return None
 
-    temperature = aggregated_weather_data.avg_temp
-    rain_probability = aggregated_weather_data.avg_rain_prob
-    return f"Based on the current hour for zip code: {zip_code}, the temperature is {temperature}°F with a rain probability of {rain_probability}%"
+    # FastAPI converts this Pydantic model to JSON
+    return aggregated_weather_data
