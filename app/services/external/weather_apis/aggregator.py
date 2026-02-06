@@ -26,7 +26,7 @@ class AggregateWeatherData(BaseModel):
     avg_rain_prob: int
 
 
-# TODO: Decide if date_time will be kept for the user here
+# TODO: Decide if date_time will be kept here for the user
 async def get_aggregated_weather_data(zip_code: str) -> Optional[AggregateWeatherData]:
     # # Date/time format: Arrow object in UTC time ("YYYY-MM-DDTHH:mm:ss+00:00")
     # date_time: arrow.arrow.Arrow = arrow.get(
