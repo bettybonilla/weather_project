@@ -37,7 +37,7 @@ async def get_location_data(zip_code: str) -> Optional[Result]:
     )
     if response.status_code != 200:
         logging.getLogger(__name__).warning(
-            f"Status Code: {response.status_code} | Failed to get geocoding location data for zip code: {zip_code}"
+            f"Status Code: {response.status_code} | Failed to get Geocoding location data for zip code: {zip_code}"
         )
         return None
 
@@ -45,7 +45,7 @@ async def get_location_data(zip_code: str) -> Optional[Result]:
         geocoding = GeocodingDataModel(**response.json())
     except ValidationError as e:
         logging.getLogger(__name__).warning(
-            f"Error: ValidationError | Failed to get geocoding location data for zip code: {zip_code}\n{e}"
+            f"Error: ValidationError | Failed to get Geocoding location data for zip code: {zip_code}\n{e}"
         )
         return None
 
@@ -56,9 +56,10 @@ async def get_location_data(zip_code: str) -> Optional[Result]:
 
     if us_result is None:
         logging.getLogger(__name__).warning(
-            f"Failed to get geocoding location data in the US for zip code: {zip_code}"
+            f"Failed to get Geocoding location data in the US for zip code: {zip_code}"
         )
         return None
+    us_result._zip_code = zip_code
     return us_result
 
 
