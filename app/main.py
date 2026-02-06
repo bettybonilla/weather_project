@@ -20,7 +20,6 @@ app = FastAPI()
 
 base = APIRouter()
 
-# TODO: Create a separate weather router for /weather-retriever or keep it on the base router?
 # ROUTES ---------------------------------------------------------------------------------------------------------------
 base.get("/", status_code=status.HTTP_200_OK)(health.check_handler)
 base.get("/health-check", status_code=status.HTTP_200_OK)(health.check_handler)

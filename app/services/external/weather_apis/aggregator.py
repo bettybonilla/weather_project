@@ -21,7 +21,6 @@ __WEATHER_GETTERS: list[IWeatherGetter] = [
 ]
 
 
-# TODO: Maybe use a dataclass here?
 class AggregateWeatherData(BaseModel):
     avg_temp: int
     avg_rain_prob: int
