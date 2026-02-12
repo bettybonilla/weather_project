@@ -42,4 +42,3 @@
       - **migrate** depends on mysql, therefore the sql image is started
       - after the service is live alembic commands within the Dockerfile are executed which call the code written in **def upgrade**
       - new tables are created within the sql image if they don't exist
-            

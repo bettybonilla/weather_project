@@ -73,11 +73,10 @@ async def get_aggregated_weather_data(zip_code: str) -> Optional[AggregateWeathe
 if __name__ == "__main__":
     import random
 
-
     class TestWeatherGetter(IWeatherGetter):
         @staticmethod
         async def get_weather_data(
-                location_data_result: Optional[location_data.Result],
+            location_data_result: Optional[location_data.Result],
         ) -> Optional[NormalizedWeatherData]:
             if location_data_result.get_zip_code() != "07310":
                 return None
@@ -85,7 +84,6 @@ if __name__ == "__main__":
             temperature = random.uniform(0.0, 90.0)
             rain_probability = random.randint(0, 100)
             return NormalizedWeatherData(temperature, rain_probability)
-
 
     __WEATHER_GETTERS: list[IWeatherGetter] = [
         TestWeatherGetter(),

@@ -20,7 +20,7 @@ class NWSPointsURLDataModel(BaseModel):
 
 
 def get_points_url(
-        location_data_result: Optional[location_data.Result],
+    location_data_result: Optional[location_data.Result],
 ) -> Optional[Property]:
     lat, long = location_data_result.get_lat_long()
     base_url = "https://api.weather.gov/points"

@@ -33,7 +33,7 @@ class WeatherAPIDataModel:
 class WeatherAPI(IWeatherGetter):
     @staticmethod
     async def get_weather_data(
-            location_data_result: Optional[location_data.Result],
+        location_data_result: Optional[location_data.Result],
     ) -> Optional[NormalizedWeatherData]:
         api_key = os.getenv("WEATHERAPI_API_KEY")
         if not api_key:

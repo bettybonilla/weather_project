@@ -46,7 +46,7 @@ class NWSDataModel(BaseModel):
 class NWSAPI(IWeatherGetter):
     @staticmethod
     async def get_weather_data(
-            location_data_result: Optional[location_data.Result],
+        location_data_result: Optional[location_data.Result],
     ) -> Optional[NormalizedWeatherData]:
         nws_points_url = get_points_url(location_data_result)
         if nws_points_url is None:
@@ -87,7 +87,7 @@ class NWSAPI(IWeatherGetter):
                 hourly_period
                 for hourly_period in nws.properties.periods
                 if arrow.get(hourly_period.start_time).to("UTC")
-                   == current_top_of_hour_utc_time
+                == current_top_of_hour_utc_time
             ),
             None,
         )
@@ -138,7 +138,7 @@ if __name__ == "__main__":
                 hourly_period
                 for hourly_period in test_data.properties.periods
                 if arrow.get(hourly_period.start_time).to("UTC")
-                   == test_current_top_of_hour_utc_time
+                == test_current_top_of_hour_utc_time
             ),
             None,
         )
