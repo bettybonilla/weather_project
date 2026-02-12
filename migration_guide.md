@@ -18,7 +18,7 @@
     - edits and appends to the pyproject.toml file
 
   - within the alembic.ini file
-    - find sqlalchemy.url and set the value to the pymql docker-compose connection string
+    - find sqlalchemy.url and set the value to the pymysql docker-compose connection string
       - example: **mysql+pymysql://weather_user:weather_password@mysql:3306/weather**
 
   - create migrations revisions

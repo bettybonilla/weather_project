@@ -1,9 +1,13 @@
 import logging
 
+from fastapi import Depends
+from sqlalchemy.orm import Session
+
+from app.database import get_db
 from app.services.external.weather_apis.aggregator import get_aggregated_weather_data
 
 
-async def retriever_handler(zip_code: str):
+async def retriever_handler(db: Session = Depends(get_db), zip_code: str = ""):
     aggregated_weather_data = await get_aggregated_weather_data(zip_code)
     if aggregated_weather_data is None:
         logging.getLogger(__name__).error(
