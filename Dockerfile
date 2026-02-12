@@ -27,13 +27,7 @@ COPY pyproject.toml uv.lock requirements.txt* ./
 # 5) install Python + deps using uv
 # - uv sync → pyproject.toml / uv.lock
 # - uv pip install → requirements.txt
-RUN if [ -f pyproject.toml ] || [ -f uv.lock ]; then \
-        uv sync --python ${UV_PYTHON}; \
-    elif [ -f requirements.txt ]; then \
-        uv pip install --python ${UV_PYTHON} -r requirements.txt; \
-    else \
-        uv python install ${UV_PYTHON}; \
-    fi
+RUN uv sync --python ${UV_PYTHON}
 
 # 6) copy application code
 COPY . .

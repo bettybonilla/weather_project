@@ -1,0 +1,30 @@
+# Dockerfile.migrate (recommended)
+FROM python:3.14-slim
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV UV_PYTHON=3.14
+WORKDIR /app
+
+# system deps for building mysql client if needed
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+      ca-certificates curl build-essential libssl-dev default-libmysqlclient-dev gcc \
+ && rm -rf /var/lib/apt/lists/*
+
+# install UV
+RUN curl -Ls https://astral.sh/uv/install.sh | sh
+ENV PATH="/root/.local/bin:${PATH}"
+
+# copy pyproject/lock and install deps via uv
+COPY pyproject.toml uv.lock* ./
+RUN uv sync --python ${UV_PYTHON}
+
+# copy alembic + app + config so env.py can import
+COPY alembic.ini .
+COPY alembic/ ./alembic/
+COPY app/ ./app/
+
+WORKDIR /app
+
+# Run alembic using UV-managed python
+CMD ["uv", "run", "python", "-m", "alembic", "upgrade", "head"]
