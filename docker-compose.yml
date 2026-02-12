@@ -57,7 +57,8 @@ services:
       MYSQL_USER: weather_user
       MYSQL_PASSWORD: weather_password
 
-      # TODO ADD API KEY FOR WEATHER API (ADD it to .env locally and expose here)
+      # API key for WeatherAPI
+      WEATHERAPI_API_KEY:
 
       # Redis connection
       REDIS_HOST: redis
