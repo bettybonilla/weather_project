@@ -18,14 +18,15 @@ logging.basicConfig(
 
 app = FastAPI()
 
-base = APIRouter()
-
 # ROUTES ---------------------------------------------------------------------------------------------------------------
+
+base = APIRouter()
 base.get("/", status_code=status.HTTP_200_OK)(health.check_handler)
 base.get("/health-check", status_code=status.HTTP_200_OK)(health.check_handler)
 base.get("/weather-retriever", status_code=status.HTTP_200_OK)(
     weather.retriever_handler
 )
-# ROUTES ---------------------------------------------------------------------------------------------------------------
 
 app.include_router(base)
+
+# ROUTES ---------------------------------------------------------------------------------------------------------------

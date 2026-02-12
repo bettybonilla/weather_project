@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import math
+from enum import Enum
 from typing import Optional
 
 from pydantic import BaseModel
@@ -21,9 +22,15 @@ __WEATHER_GETTERS: list[IWeatherGetter] = [
 ]
 
 
+class TemperatureType(str, Enum):
+    FAHRENHEIT = "fahrenheit"
+    CELSIUS = "celsius"
+
+
 class AggregateWeatherData(BaseModel):
     avg_temp: int
     avg_rain_prob: int
+    unit: TemperatureType = TemperatureType.FAHRENHEIT
 
 
 # TODO: Decide if date_time will be kept here for the user
@@ -66,10 +73,11 @@ async def get_aggregated_weather_data(zip_code: str) -> Optional[AggregateWeathe
 if __name__ == "__main__":
     import random
 
+
     class TestWeatherGetter(IWeatherGetter):
         @staticmethod
         async def get_weather_data(
-            location_data_result: Optional[location_data.Result],
+                location_data_result: Optional[location_data.Result],
         ) -> Optional[NormalizedWeatherData]:
             if location_data_result.get_zip_code() != "07310":
                 return None
@@ -77,6 +85,7 @@ if __name__ == "__main__":
             temperature = random.uniform(0.0, 90.0)
             rain_probability = random.randint(0, 100)
             return NormalizedWeatherData(temperature, rain_probability)
+
 
     __WEATHER_GETTERS: list[IWeatherGetter] = [
         TestWeatherGetter(),
