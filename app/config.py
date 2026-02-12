@@ -1,6 +1,6 @@
 import os
 
-# structure of DB URL when using sqlalchemy
+# Structure of DATABASE_URL when using sqlalchemy:
 # mysql+pymysql://weather_user:weather_password@mysql:3306/weather
 
 mysql_host = os.getenv("MYSQL_HOST", "mysql")

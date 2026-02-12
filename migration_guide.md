@@ -32,9 +32,9 @@
 - Docker
   - create a new Dockerfile
     - Dockerfile.migrate
-      - it's job is to create an image that installs all the tools needed to run alembic
-    - Create a new service within the existing docker-compose file
-      - the service was labled **migrate** within the docker-compose file
+      - its job is to create an image that installs all the tools needed to run alembic
+    - create a new service within the existing docker-compose file
+      - the service was labeled **migrate** within the docker-compose file
     - execute the new service:
       - command: **docker-compose up migrate --remove-orphans**
         - this command only needs to be run once to create the tables in the database
