@@ -5,7 +5,7 @@ from typing import Optional
 import requests
 from pydantic import BaseModel, Field, ValidationError
 
-from app.config.config import REQUEST_TIMEOUT
+from app.config import REQUEST_TIMEOUT
 from app.services.external.weather_apis.location_api.geocoding import location_data
 from app.services.external.weather_apis.weather_interface import (
     IWeatherGetter,
@@ -30,7 +30,7 @@ class OpenMeteoDataModel(BaseModel):
 class OpenMeteoAPI(IWeatherGetter):
     @staticmethod
     async def get_weather_data(
-        location_data_result: Optional[location_data.Result],
+            location_data_result: Optional[location_data.Result],
     ) -> Optional[NormalizedWeatherData]:
         lat, long = location_data_result.get_lat_long()
         params = {
