@@ -5,6 +5,7 @@ from fastapi import FastAPI, APIRouter, status
 
 from app.routers import health
 from app.routers import weather
+from app.services.external.weather_apis.aggregator import AggregatedWeatherData
 
 # Configures the global root logger format
 # The StreamHandler class sends the logs to the console
@@ -23,9 +24,11 @@ app = FastAPI()
 base = APIRouter()
 base.get("/", status_code=status.HTTP_200_OK)(health.check_handler)
 base.get("/health-check", status_code=status.HTTP_200_OK)(health.check_handler)
-base.get("/weather-retriever", status_code=status.HTTP_200_OK)(
-    weather.retriever_handler
-)
+base.get(
+    "/weather-retriever",
+    response_model=AggregatedWeatherData,
+    status_code=status.HTTP_200_OK,
+)(weather.retriever_handler)
 
 app.include_router(base)
 

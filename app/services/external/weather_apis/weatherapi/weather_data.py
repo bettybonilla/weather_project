@@ -8,11 +8,11 @@ import requests
 from pydantic import ValidationError
 
 from app.config import REQUEST_TIMEOUT
-from app.services.external.weather_apis.location_api.geocoding import location_data
-from app.services.external.weather_apis.weather_interface import (
+from app.services.external.weather_apis.iweather_getter import (
     IWeatherGetter,
     NormalizedWeatherData,
 )
+from app.services.external.weather_apis.location_api.geocoding import location_data
 
 
 class WeatherAPIDataModel:
@@ -23,7 +23,7 @@ class WeatherAPIDataModel:
 
         # Normalizing rain_probability (precip_mm: int is in millimeters, not percentage)
         # Assumes 100% if precip_mm > 0
-        precip_mm: int = int(child_current.find("precip_mm").text)
+        precip_mm: float = float(child_current.find("precip_mm").text)
         self.rain_probability: int = 0
         if precip_mm > 0:
             self.rain_probability: int = 100
@@ -44,7 +44,7 @@ class WeatherAPI(IWeatherGetter):
 
         base_url = "https://api.weatherapi.com/v1/current.xml"
         response = requests.get(
-            base_url,
+            url=base_url,
             params={"key": api_key, "q": location_data_result.get_zip_code()},
             timeout=REQUEST_TIMEOUT,
         )
@@ -62,9 +62,10 @@ class WeatherAPI(IWeatherGetter):
             )
         except ValidationError as e:
             logging.getLogger(__name__).error(
-                f"Error: ValidationError | Failed to get WeatherAPI weather data for zip code: {location_data_result.get_zip_code()}\n{e}"
+                f"Error: ValidationError | Failed to get WeatherAPI weather data for zip code: {location_data_result.get_zip_code()} | {e}"
             )
             return None
+
         return normalized_weather_data
 
 

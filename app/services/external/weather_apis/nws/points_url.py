@@ -39,9 +39,10 @@ def get_points_url(
         nws_points_url = NWSPointsURLDataModel(**response.json())
     except ValidationError as e:
         logging.getLogger(__name__).warning(
-            f"Error: ValidationError | Failed to get NWS points URL for zip code: {location_data_result.get_zip_code()}\n{e}"
+            f"Error: ValidationError | Failed to get NWS points URL for zip code: {location_data_result.get_zip_code()} | {e}"
         )
         return None
+
     return nws_points_url.properties
 
 

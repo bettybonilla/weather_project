@@ -4,15 +4,22 @@ import math
 from enum import Enum
 from typing import Optional
 
+import arrow
+from fastapi import Depends
 from pydantic import BaseModel
+from sqlalchemy import select, text
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.services.external.weather_apis.location_api.geocoding import location_data
-from app.services.external.weather_apis.nws.weather_data import NWSAPI
-from app.services.external.weather_apis.open_meteo.weather_data import OpenMeteoAPI
-from app.services.external.weather_apis.weather_interface import (
+from app.database import get_db
+from app.models.hourly_weather_aggregate import HourlyWeatherAggregate
+from app.services.external.weather_apis.iweather_getter import (
     IWeatherGetter,
     NormalizedWeatherData,
 )
+from app.services.external.weather_apis.location_api.geocoding import location_data
+from app.services.external.weather_apis.nws.weather_data import NWSAPI
+from app.services.external.weather_apis.open_meteo.weather_data import OpenMeteoAPI
 from app.services.external.weather_apis.weatherapi.weather_data import WeatherAPI
 
 __WEATHER_GETTERS: list[IWeatherGetter] = [
@@ -27,23 +34,53 @@ class TemperatureType(str, Enum):
     CELSIUS = "celsius"
 
 
-class AggregateWeatherData(BaseModel):
+class AggregatedWeatherData(BaseModel):
     avg_temp: int
     avg_rain_prob: int
     unit: TemperatureType = TemperatureType.FAHRENHEIT
+    last_updated: str
 
 
-# TODO: Decide if date_time will be kept here for the user
-async def get_aggregated_weather_data(zip_code: str) -> Optional[AggregateWeatherData]:
-    # # Date/time format: Arrow object in UTC time ("YYYY-MM-DDTHH:mm:ss+00:00")
-    # date_time: arrow.arrow.Arrow = arrow.get(
-    #     arrow.utcnow().format("YYYY-MM-DDTHH:mm:ssZZ")
-    # ).to("UTC")
+def should_fetch(now: arrow.Arrow, db_row: Optional[HourlyWeatherAggregate]) -> bool:
+    if db_row is None:
+        return True
 
-    location_data_result = location_data.get_location_data(zip_code)
+    if db_row.updated_at.minute < 30 <= now.minute:
+        return True
+    return False
+
+
+async def get_aggregated_weather_data(
+    requested_zip_code: str, db: AsyncSession = Depends(get_db)
+) -> Optional[AggregatedWeatherData]:
+    now = arrow.utcnow()
+
+    # DB lookup
+    async with db.begin():
+        stmt = select(HourlyWeatherAggregate).where(
+            HourlyWeatherAggregate.zip_code == requested_zip_code,
+            HourlyWeatherAggregate.date == now.date(),
+            HourlyWeatherAggregate.hour == now.hour,
+        )
+        result = await db.execute(stmt)
+        db_row: Optional[HourlyWeatherAggregate] = result.scalar_one_or_none()
+
+    # Fast path: Found in DB and recent DB data -> Build AggregatedWeatherData from DB
+    if not should_fetch(now, db_row):
+        updated_at = arrow.get(db_row.updated_at)
+        aggregated_weather_data = AggregatedWeatherData(
+            avg_temp=db_row.avg_temp,
+            avg_rain_prob=db_row.avg_rain_prob,
+            last_updated=updated_at.format("YYYY-MM-DDTHH:mm:ssZZ"),
+        )
+        return aggregated_weather_data
+
+    # Slow path: Not found in DB or should fetch fresh data -> Build AggregatedWeatherData after API calls and upsert
+    # into DB
+    location_data_result = await location_data.get_location_data(requested_zip_code, db)
     if location_data_result is None:
         logging.getLogger(__name__).error(
-            f"Failed to get Geocoding location data for zip code: {zip_code}"
+            f"Failed to get Geocoding location data for zip code: {requested_zip_code}"
         )
         return None
 
@@ -64,8 +101,43 @@ async def get_aggregated_weather_data(zip_code: str) -> Optional[AggregateWeathe
 
     avg_temp: int = math.ceil(sum(temps) / len(temps))
     avg_rain_prob: int = math.ceil(sum(rain_probs) / len(rain_probs))
-    aggregated_weather_data = AggregateWeatherData(
-        avg_temp=avg_temp, avg_rain_prob=avg_rain_prob
+
+    # Choosing to manually use raw SQL for practice instead of using SQLAlchemy ORM features
+    try:
+        # Transactional upsert
+        # Commits transaction at the end or rolls back if the exception is raised
+        async with db.begin():
+            tx = text(
+                """
+                INSERT INTO hourly_weather_aggregates (zip_code, date, hour, avg_temp, avg_rain_prob)
+                VALUES (:zip_code, :date, :hour, :avg_temp, :avg_rain_prob)
+                ON DUPLICATE KEY UPDATE
+                    avg_temp = :avg_temp,
+                    avg_rain_prob = :avg_rain_prob,
+                    updated_at = :updated_at;
+                """
+            )
+            await db.execute(
+                tx,
+                {
+                    "zip_code": requested_zip_code,
+                    "date": now.date(),
+                    "hour": now.hour,
+                    "avg_temp": avg_temp,
+                    "avg_rain_prob": avg_rain_prob,
+                    "updated_at": now,
+                },
+            )
+    except SQLAlchemyError as e:
+        logging.getLogger(__name__).error(
+            f"Error: SQLAlchemyError | Failed to upsert into the hourly_weather_aggregates database table | {e}"
+        )
+        return None
+
+    aggregated_weather_data = AggregatedWeatherData(
+        avg_temp=avg_temp,
+        avg_rain_prob=avg_rain_prob,
+        last_updated=now.format("YYYY-MM-DDTHH:mm:ssZZ"),
     )
     return aggregated_weather_data
 
@@ -83,7 +155,9 @@ if __name__ == "__main__":
 
             temperature = random.uniform(0.0, 90.0)
             rain_probability = random.randint(0, 100)
-            return NormalizedWeatherData(temperature, rain_probability)
+            return NormalizedWeatherData(
+                temperature=temperature, rain_probability=rain_probability
+            )
 
     __WEATHER_GETTERS: list[IWeatherGetter] = [
         TestWeatherGetter(),
@@ -93,6 +167,6 @@ if __name__ == "__main__":
         TestWeatherGetter(),
     ]
 
-    result = asyncio.run(get_aggregated_weather_data("07310"))
-    print(result)
+    test_result = asyncio.run(get_aggregated_weather_data("07310"))
+    print(test_result)
     print("DONE")
