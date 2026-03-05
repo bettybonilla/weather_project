@@ -7,12 +7,12 @@ import requests
 from pydantic import BaseModel, Field, ValidationError
 
 from app.config import REQUEST_TIMEOUT
-from app.services.external.weather_apis.location_api.geocoding import location_data
-from app.services.external.weather_apis.nws.points_url import get_points_url
-from app.services.external.weather_apis.weather_interface import (
+from app.services.external.weather_apis.iweather_getter import (
     IWeatherGetter,
     NormalizedWeatherData,
 )
+from app.services.external.weather_apis.location_api.geocoding import location_data
+from app.services.external.weather_apis.nws.points_url import get_points_url
 
 
 class Value(BaseModel):
@@ -77,7 +77,7 @@ class NWSAPI(IWeatherGetter):
             nws = NWSDataModel(**response.json())
         except ValidationError as e:
             logging.getLogger(__name__).error(
-                f"Error: ValidationError | Failed to get NWS weather data for zip code: {location_data_result.get_zip_code()}\n{e}"
+                f"Error: ValidationError | Failed to get NWS weather data for zip code: {location_data_result.get_zip_code()} | {e}"
             )
             return None
 

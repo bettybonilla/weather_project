@@ -5,10 +5,10 @@ from app.services.external.weather_apis.location_api.geocoding import location_d
 
 class NormalizedWeatherData:
     def __init__(self, temperature: float, rain_probability: int):
-        self.temperature: float = temperature
+        self.temperature = temperature
 
         # Percentage: 0-100
-        self.rain_probability: int = rain_probability
+        self.rain_probability = rain_probability
 
 
 class IWeatherGetter(Protocol):
