@@ -1,0 +1,17 @@
+from typing import AsyncGenerator
+
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+
+from .config import DATABASE_URL
+
+engine = create_async_engine(DATABASE_URL, pool_pre_ping=True)
+SessionLocal = async_sessionmaker(
+    bind=engine,
+    expire_on_commit=False,
+    autoflush=False,
+)
+
+
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    async with SessionLocal() as session:
+        yield session

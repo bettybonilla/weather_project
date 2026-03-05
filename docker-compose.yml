@@ -1,0 +1,77 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: weather_project-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: weather
+      MYSQL_USER: weather_user
+      MYSQL_PASSWORD: weather_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  redis:
+    image: redis:7-alpine
+    container_name: weather_project-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile.migrate
+    environment:
+      DATABASE_URL: "mysql+asyncmy://weather_user:weather_password@mysql:3306/weather"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: weather_project-web
+    ports:
+      - "8000:8000"
+    environment:
+      PORT: "8000"
+
+      # MySQL connection
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DB: weather
+      MYSQL_USER: weather_user
+      MYSQL_PASSWORD: weather_password
+
+      # API key for WeatherAPI
+      WEATHERAPI_API_KEY:
+
+      # Redis connection
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+
+    volumes:
+      - ./:/app:delegated
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  mysql_data:
+    driver: local

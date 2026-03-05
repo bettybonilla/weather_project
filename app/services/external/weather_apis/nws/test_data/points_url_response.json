@@ -1,0 +1,94 @@
+{
+  "@context": [
+    "https://geojson.org/geojson-ld/geojson-context.jsonld",
+    {
+      "@version": "1.1",
+      "wx": "https://api.weather.gov/ontology#",
+      "s": "https://schema.org/",
+      "geo": "http://www.opengis.net/ont/geosparql#",
+      "unit": "http://codes.wmo.int/common/unit/",
+      "@vocab": "https://api.weather.gov/ontology#",
+      "geometry": {
+        "@id": "s:GeoCoordinates",
+        "@type": "geo:wktLiteral"
+      },
+      "city": "s:addressLocality",
+      "state": "s:addressRegion",
+      "distance": {
+        "@id": "s:Distance",
+        "@type": "s:QuantitativeValue"
+      },
+      "bearing": {
+        "@type": "s:QuantitativeValue"
+      },
+      "value": {
+        "@id": "s:value"
+      },
+      "unitCode": {
+        "@id": "s:unitCode",
+        "@type": "@id"
+      },
+      "forecastOffice": {
+        "@type": "@id"
+      },
+      "forecastGridData": {
+        "@type": "@id"
+      },
+      "publicZone": {
+        "@type": "@id"
+      },
+      "county": {
+        "@type": "@id"
+      }
+    }
+  ],
+  "id": "https://api.weather.gov/points/40.7282,-74.0776",
+  "type": "Feature",
+  "geometry": {
+    "type": "Point",
+    "coordinates": [
+      -74.0776,
+      40.7282
+    ]
+  },
+  "properties": {
+    "@id": "https://api.weather.gov/points/40.7282,-74.0776",
+    "@type": "wx:Point",
+    "cwa": "OKX",
+    "forecastOffice": "https://api.weather.gov/offices/OKX",
+    "gridId": "OKX",
+    "gridX": 31,
+    "gridY": 35,
+    "forecast": "https://api.weather.gov/gridpoints/OKX/31,35/forecast",
+    "forecastHourly": "https://api.weather.gov/gridpoints/OKX/31,35/forecast/hourly",
+    "forecastGridData": "https://api.weather.gov/gridpoints/OKX/31,35",
+    "observationStations": "https://api.weather.gov/gridpoints/OKX/31,35/stations",
+    "relativeLocation": {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -74.06476,
+          40.711417
+        ]
+      },
+      "properties": {
+        "city": "Jersey City",
+        "state": "NJ",
+        "distance": {
+          "unitCode": "wmoUnit:m",
+          "value": 2157.2194260505
+        },
+        "bearing": {
+          "unitCode": "wmoUnit:degree_(angle)",
+          "value": 329
+        }
+      }
+    },
+    "forecastZone": "https://api.weather.gov/zones/forecast/NJZ006",
+    "county": "https://api.weather.gov/zones/county/NJC017",
+    "fireWeatherZone": "https://api.weather.gov/zones/fire/NJZ006",
+    "timeZone": "America/New_York",
+    "radarStation": "KDIX"
+  }
+}
