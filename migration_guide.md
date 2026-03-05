@@ -39,6 +39,6 @@
       - command: **docker-compose up migrate --remove-orphans**
         - this command only needs to be run once to create the tables in the database
         - to start the webserver continue to use the **dc** alias
-      - **migrate** depends on mysql, therefore the sql image is started
+      - **migrate** depends on mysql, therefore the SQL image is started
       - after the service is live alembic commands within the Dockerfile are executed which call the code written in **def upgrade**
-      - new tables are created within the sql image if they don't exist
+      - new tables are created within the SQL image if they don't exist
