@@ -49,23 +49,19 @@ services:
       - "8000:8000"
     environment:
       PORT: "8000"
-
-      # MySQL connection
       MYSQL_HOST: mysql
       MYSQL_PORT: 3306
       MYSQL_DB: weather
       MYSQL_USER: weather_user
       MYSQL_PASSWORD: weather_password
-
-      # API key for WeatherAPI
-      WEATHERAPI_API_KEY:
-
-      # Redis connection
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      WEATHERAPI_API_KEY:
 
     volumes:
       - ./:/app:delegated
+      - web_venv:/app/.venv
+
     depends_on:
       mysql:
         condition: service_healthy
@@ -74,4 +70,6 @@ services:
 
 volumes:
   mysql_data:
+    driver: local
+  web_venv:
     driver: local
