@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import math
+import os
 from enum import Enum
 from typing import Optional
 
@@ -54,27 +55,31 @@ async def get_aggregated_weather_data(
     requested_zip_code: str, db: AsyncSession = Depends(get_db)
 ) -> Optional[AggregatedWeatherData]:
     now = arrow.utcnow()
+    dev_bypass_cache = bool(int(os.getenv("DEV_BYPASS_CACHE")))
 
-    # DB lookup
-    async with db.begin():
-        stmt = select(HourlyWeatherAggregate).where(
-            HourlyWeatherAggregate.zip_code == requested_zip_code,
-            HourlyWeatherAggregate.date == now.date(),
-            HourlyWeatherAggregate.hour == now.hour,
-        )
-        result = await db.execute(stmt)
-        db_row: Optional[HourlyWeatherAggregate] = result.scalar_one_or_none()
+    # DEV_BYPASS_CACHE set to 0 or returns None with os.getenv()
+    if not dev_bypass_cache:
+        # DB lookup
+        async with db.begin():
+            stmt = select(HourlyWeatherAggregate).where(
+                HourlyWeatherAggregate.zip_code == requested_zip_code,
+                HourlyWeatherAggregate.date == now.date(),
+                HourlyWeatherAggregate.hour == now.hour,
+            )
+            result = await db.execute(stmt)
+            db_row: Optional[HourlyWeatherAggregate] = result.scalar_one_or_none()
 
-    # Fast path: Found in DB and recent DB data -> Build AggregatedWeatherData from DB
-    if not should_fetch(now, db_row):
-        updated_at = arrow.get(db_row.updated_at)
-        aggregated_weather_data = AggregatedWeatherData(
-            avg_temp=db_row.avg_temp,
-            avg_rain_prob=db_row.avg_rain_prob,
-            last_updated=updated_at.format("YYYY-MM-DDTHH:mm:ssZZ"),
-        )
-        return aggregated_weather_data
+        # Fast path: Found in DB and recent DB data -> Build AggregatedWeatherData from DB
+        if not should_fetch(now, db_row):
+            updated_at = arrow.get(db_row.updated_at)
+            aggregated_weather_data = AggregatedWeatherData(
+                avg_temp=db_row.avg_temp,
+                avg_rain_prob=db_row.avg_rain_prob,
+                last_updated=updated_at.format("YYYY-MM-DDTHH:mm:ssZZ"),
+            )
+            return aggregated_weather_data
 
+    # DEV_BYPASS_CACHE set to 1
     # Slow path: Not found in DB or should fetch fresh data -> Build AggregatedWeatherData after API calls and upsert
     # into DB
     location_data_result = await location_data.get_location_data(requested_zip_code, db)
