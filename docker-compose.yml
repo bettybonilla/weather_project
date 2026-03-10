@@ -56,6 +56,7 @@ services:
       MYSQL_PASSWORD: weather_password
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      DEV_BYPASS_CACHE: 0
       WEATHERAPI_API_KEY:
 
     volumes:
