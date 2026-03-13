@@ -18,18 +18,6 @@ services:
       timeout: 5s
       retries: 30
 
-  redis:
-    image: redis:7-alpine
-    container_name: weather_project-redis
-    restart: unless-stopped
-    ports:
-      - "6379:6379"
-    healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
-      interval: 5s
-      timeout: 5s
-      retries: 30
-
   migrate:
     build:
       context: .
@@ -54,10 +42,8 @@ services:
       MYSQL_DB: weather
       MYSQL_USER: weather_user
       MYSQL_PASSWORD: weather_password
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      DEV_BYPASS_CACHE: 0
       WEATHERAPI_API_KEY:
+      DEV_BYPASS_CACHE:
 
     volumes:
       - ./:/app:delegated
@@ -65,8 +51,6 @@ services:
 
     depends_on:
       mysql:
-        condition: service_healthy
-      redis:
         condition: service_healthy
 
 volumes:
