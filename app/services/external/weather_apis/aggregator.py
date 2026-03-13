@@ -42,6 +42,21 @@ class AggregatedWeatherData(BaseModel):
     last_updated: str
 
 
+def use_cache() -> bool:
+    """
+    Returns True if DEV_BYPASS_CACHE is set to 0 in the environment.
+    """
+    default_value = True
+    dev_bypass_cache = os.getenv("DEV_BYPASS_CACHE")
+    if not dev_bypass_cache:
+        return default_value
+
+    if dev_bypass_cache not in ("0", "1"):
+        return default_value
+
+    return not bool(int(dev_bypass_cache))
+
+
 def should_fetch(now: arrow.Arrow, db_row: Optional[HourlyWeatherAggregate]) -> bool:
     if db_row is None:
         return True
@@ -55,10 +70,8 @@ async def get_aggregated_weather_data(
     requested_zip_code: str, db: AsyncSession = Depends(get_db)
 ) -> Optional[AggregatedWeatherData]:
     now = arrow.utcnow()
-    dev_bypass_cache = bool(int(os.getenv("DEV_BYPASS_CACHE")))
 
-    # DEV_BYPASS_CACHE set to 0 or returns None with os.getenv()
-    if not dev_bypass_cache:
+    if use_cache():
         # DB lookup
         async with db.begin():
             stmt = select(HourlyWeatherAggregate).where(
@@ -79,7 +92,6 @@ async def get_aggregated_weather_data(
             )
             return aggregated_weather_data
 
-    # DEV_BYPASS_CACHE set to 1
     # Slow path: Not found in DB or should fetch fresh data -> Build AggregatedWeatherData after API calls and upsert
     # into DB
     location_data_result = await location_data.get_location_data(requested_zip_code, db)
