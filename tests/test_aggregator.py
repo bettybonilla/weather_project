@@ -4,7 +4,24 @@ import arrow
 import pytest
 
 from app.models.hourly_weather_aggregate import HourlyWeatherAggregate
-from app.services.external.weather_apis.aggregator import should_fetch
+from app.services.external.weather_apis.aggregator import use_cache, should_fetch
+
+
+def test_use_cache(monkeypatch):
+    # monkeypatch emulates the environment variable with auto-teardown/cleanup so tests are isolated and don't depend on
+    # the real environment variable
+    # DEV_BYPASS_CACHE not set
+    monkeypatch.delenv("DEV_BYPASS_CACHE")
+    assert use_cache() == True
+
+    monkeypatch.setenv("DEV_BYPASS_CACHE", "bad value")
+    assert use_cache() == True
+
+    monkeypatch.setenv("DEV_BYPASS_CACHE", "0")
+    assert use_cache() == True
+
+    monkeypatch.setenv("DEV_BYPASS_CACHE", "1")
+    assert use_cache() == False
 
 
 def mock_data(
