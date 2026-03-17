@@ -3,7 +3,7 @@ import logging
 from typing import Optional
 
 import arrow
-import requests
+import requests_async as requests
 from pydantic import BaseModel, Field, ValidationError
 
 from app.config import REQUEST_TIMEOUT
@@ -48,7 +48,7 @@ class NWSAPI(IWeatherGetter):
     async def get_weather_data(
         location_data_result: Optional[location_data.Result],
     ) -> Optional[NormalizedWeatherData]:
-        nws_points_url = get_points_url(location_data_result)
+        nws_points_url = await get_points_url(location_data_result)
         if nws_points_url is None:
             logging.getLogger(__name__).error(
                 f"Failed to get NWS points URL for zip code: {location_data_result.get_zip_code()}"
@@ -62,14 +62,20 @@ class NWSAPI(IWeatherGetter):
             )
             return None
 
-        response = requests.get(
-            redirect_url,
-            headers={"Accept": "application/geo+json"},
-            timeout=REQUEST_TIMEOUT,
-        )
-        if response.status_code != 200:
+        try:
+            response = await requests.get(
+                url=redirect_url,
+                headers={"Accept": "application/geo+json"},
+                timeout=REQUEST_TIMEOUT,
+            )
+            if response.status_code != 200:
+                logging.getLogger(__name__).error(
+                    f"Status Code: {response.status_code} | Failed to get NWS weather data for zip code: {location_data_result.get_zip_code()}"
+                )
+                return None
+        except Exception as e:
             logging.getLogger(__name__).error(
-                f"Status Code: {response.status_code} | Failed to get NWS weather data for zip code: {location_data_result.get_zip_code()}"
+                f"Error: Exception | Failed to get NWS weather data for zip code: {location_data_result.get_zip_code()} | {e}"
             )
             return None
 

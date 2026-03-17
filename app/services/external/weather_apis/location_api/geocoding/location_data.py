@@ -1,9 +1,8 @@
-import asyncio
 import logging
 from typing import Optional
 
 import arrow
-import requests
+import requests_async as requests
 from fastapi import Depends
 from pydantic import BaseModel
 from pydantic import Field, ValidationError
@@ -91,16 +90,22 @@ async def get_location_data(
 
     # Slow path: Not found in DB -> Build Result after API call and upsert into DB
     base_url = "https://geocoding-api.open-meteo.com/v1/search"
-    response = await asyncio.to_thread(
-        requests.get,
-        url=base_url,
-        headers={"Accept": "application/json"},
-        params={"name": requested_zip_code},
-        timeout=REQUEST_TIMEOUT,
-    )
-    if response.status_code != 200:
+
+    try:
+        response = await requests.get(
+            url=base_url,
+            headers={"Accept": "application/json"},
+            params={"name": requested_zip_code},
+            timeout=REQUEST_TIMEOUT,
+        )
+        if response.status_code != 200:
+            logging.getLogger(__name__).warning(
+                f"Status Code: {response.status_code} | Failed to get Geocoding location data for zip code: {requested_zip_code}"
+            )
+            return None
+    except Exception as e:
         logging.getLogger(__name__).warning(
-            f"Status Code: {response.status_code} | Failed to get Geocoding location data for zip code: {requested_zip_code}"
+            f"Error: Exception | Failed to get Geocoding location data for zip code: {requested_zip_code} | {e}"
         )
         return None
 

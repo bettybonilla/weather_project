@@ -48,6 +48,7 @@ def use_cache() -> bool:
     """
     default_value = True
     dev_bypass_cache = os.getenv("DEV_BYPASS_CACHE")
+
     if not dev_bypass_cache:
         return default_value
 
@@ -63,6 +64,7 @@ def should_fetch(now: arrow.Arrow, db_row: Optional[HourlyWeatherAggregate]) -> 
 
     if db_row.updated_at.minute < 30 <= now.minute:
         return True
+
     return False
 
 
