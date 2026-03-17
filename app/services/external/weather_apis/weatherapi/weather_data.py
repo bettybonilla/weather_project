@@ -4,7 +4,7 @@ import os
 import xml.etree.ElementTree as ET
 from typing import Optional
 
-import requests
+import requests_async as requests
 from pydantic import ValidationError
 
 from app.config import REQUEST_TIMEOUT
@@ -21,7 +21,7 @@ class WeatherAPIDataModel:
         child_current = root.find("current")
         self.temperature: float = float(child_current.find("temp_f").text)
 
-        # Normalizing rain_probability (precip_mm: int is in millimeters, not percentage)
+        # Normalizing rain_probability (precip_mm is in millimeters, not percentage)
         # Assumes 100% if precip_mm > 0
         precip_mm: float = float(child_current.find("precip_mm").text)
         self.rain_probability: int = 0
@@ -35,6 +35,8 @@ class WeatherAPI(IWeatherGetter):
     async def get_weather_data(
         location_data_result: Optional[location_data.Result],
     ) -> Optional[NormalizedWeatherData]:
+        base_url = "https://api.weatherapi.com/v1/current.xml"
+
         api_key = os.getenv("WEATHERAPI_API_KEY")
         if not api_key:
             logging.getLogger(__name__).error(
@@ -42,15 +44,20 @@ class WeatherAPI(IWeatherGetter):
             )
             return None
 
-        base_url = "https://api.weatherapi.com/v1/current.xml"
-        response = requests.get(
-            url=base_url,
-            params={"key": api_key, "q": location_data_result.get_zip_code()},
-            timeout=REQUEST_TIMEOUT,
-        )
-        if response.status_code != 200:
+        try:
+            response = await requests.get(
+                url=base_url,
+                params={"key": api_key, "q": location_data_result.get_zip_code()},
+                timeout=REQUEST_TIMEOUT,
+            )
+            if response.status_code != 200:
+                logging.getLogger(__name__).error(
+                    f"Status Code: {response.status_code} | Failed to get WeatherAPI weather data for zip code: {location_data_result.get_zip_code()}"
+                )
+                return None
+        except Exception as e:
             logging.getLogger(__name__).error(
-                f"Status Code: {response.status_code} | Failed to get WeatherAPI weather data for zip code: {location_data_result.get_zip_code()}"
+                f"Error: Exception | Failed to get WeatherAPI weather data for zip code: {location_data_result.get_zip_code()} | {e}"
             )
             return None
 

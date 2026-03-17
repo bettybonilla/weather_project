@@ -2,7 +2,7 @@ import asyncio
 import logging
 from typing import Optional
 
-import requests
+import requests_async as requests
 from pydantic import BaseModel, Field, ValidationError
 
 from app.config import REQUEST_TIMEOUT
@@ -32,6 +32,7 @@ class OpenMeteoAPI(IWeatherGetter):
     async def get_weather_data(
         location_data_result: Optional[location_data.Result],
     ) -> Optional[NormalizedWeatherData]:
+        base_url = "https://api.open-meteo.com/v1/forecast"
         lat, long = location_data_result.get_lat_long()
         params = {
             "latitude": lat,
@@ -45,16 +46,21 @@ class OpenMeteoAPI(IWeatherGetter):
             "timezone": "auto",
         }
 
-        base_url = "https://api.open-meteo.com/v1/forecast"
-        response = requests.get(
-            url=base_url,
-            headers={"Accept": "application/json"},
-            params=params,
-            timeout=REQUEST_TIMEOUT,
-        )
-        if response.status_code != 200:
+        try:
+            response = await requests.get(
+                url=base_url,
+                headers={"Accept": "application/json"},
+                params=params,
+                timeout=REQUEST_TIMEOUT,
+            )
+            if response.status_code != 200:
+                logging.getLogger(__name__).error(
+                    f"Status Code: {response.status_code} | Failed to get Open-Meteo weather data for zip code: {location_data_result.get_zip_code()}"
+                )
+                return None
+        except Exception as e:
             logging.getLogger(__name__).error(
-                f"Status Code: {response.status_code} | Failed to get Open-Meteo weather data for zip code: {location_data_result.get_zip_code()}"
+                f"Error: Exception | Failed to get Open-Meteo weather data for zip code: {location_data_result.get_zip_code()} | {e}"
             )
             return None
 
