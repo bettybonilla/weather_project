@@ -7,14 +7,16 @@ from app.routers import health
 from app.routers import weather
 from app.services.external.weather_apis.aggregator import AggregatedWeatherData
 
-# Configures the global root logger format
-# The StreamHandler class sends the logs to the console
-# stdout is typically white (OS contingent)
-# stderr is typically red (OS contingent) -> stream parameter default
-logging.basicConfig(
+import coloredlogs
+
+# fmt: Configures the global root logger format
+# isatty: is a system function used to determine whether a given file descriptor is connected to a terminal (TTY) device.
+coloredlogs.install(
     level=logging.DEBUG,
-    handlers=[logging.StreamHandler(stream=sys.stdout)],
-    format="%(asctime)s | %(levelname)s | %(name)s: Line %(lineno)d | %(message)s",
+    logger=logging.getLogger(),
+    fmt="%(asctime)s | %(levelname)s | %(name)s: Line %(lineno)d | %(message)s",
+    stream=sys.stdout,
+    isatty=True,  # force ANSI colors even in docker
 )
 
 app = FastAPI()
