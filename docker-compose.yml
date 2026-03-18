@@ -44,6 +44,10 @@ services:
       MYSQL_PASSWORD: weather_password
       WEATHERAPI_API_KEY:
       DEV_BYPASS_CACHE:
+        
+    # This settings allow the coloredlogs package to work within a Docker env
+    tty: true
+    stdin_open: true
 
     volumes:
       - ./:/app:delegated
