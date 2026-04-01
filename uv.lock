@@ -829,7 +829,7 @@ requires-dist = [
     { name = "pytest", specifier = ">=9.0.2" },
     { name = "python-dateutil", specifier = "==2.9.0.post0" },
     { name = "pytokens", specifier = "==0.2.0" },
-    { name = "requests-async", specifier = ">=0.2.4" },
+    { name = "requests-async", specifier = "==0.2.4" },
     { name = "six", specifier = "==1.17.0" },
     { name = "sqlalchemy", specifier = ">=2.0.46" },
     { name = "typing-extensions", specifier = "==4.15.0" },
